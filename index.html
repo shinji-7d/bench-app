@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1115">
+<title>ベンチ13週プログラム</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏋️</text></svg>">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2a2f3a;
+  --tx:#e8eaf0; --tx2:#9aa3b2; --tx3:#636c7d;
+  --ac:#4a9eff; --ok:#39c07a; --warn:#ffb020; --dim:#262b35;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(120px + var(--safe-b))}
+button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font-family:inherit;color:inherit;background:none;border:none;outline:none}
+
+/* ---- header ---- */
+header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  padding-top:env(safe-area-inset-top,0px)}
+.wkbar{display:flex;align-items:center;gap:8px;padding:10px 12px 8px}
+.wkbar .nav{width:38px;height:38px;border-radius:10px;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--tx2);flex:none}
+.wkbar .nav:active{background:var(--dim)}
+.wkttl{flex:1;min-width:0}
+.wkttl b{font-size:19px;letter-spacing:.02em}
+.wkttl .sub{font-size:11px;color:var(--tx3);display:block;margin-top:-2px}
+.ic{width:38px;height:38px;border-radius:10px;background:var(--card2);display:flex;
+  align-items:center;justify-content:center;font-size:15px;color:var(--tx2);flex:none}
+.daytabs{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;scrollbar-width:none}
+.daytabs::-webkit-scrollbar{display:none}
+.dtab{flex:none;padding:7px 13px;border-radius:999px;background:var(--card2);
+  font-size:13px;font-weight:600;color:var(--tx2);white-space:nowrap;position:relative}
+.dtab.on{background:var(--ac);color:#fff}
+.dtab .dot{position:absolute;top:4px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.dtab.on .dot{background:#fff}
+
+/* ---- blocks ---- */
+.wrap{padding:12px}
+.banner{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:11px 13px;margin-bottom:12px;font-size:12.5px;color:var(--tx2);line-height:1.55}
+.banner b{color:var(--tx)}
+.banner.dl{border-color:#3d4a2a;background:#1c2217}
+.banner.test{border-color:#4a3a2a;background:#231c17}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  margin-bottom:11px;overflow:hidden}
+.card.done{opacity:.62}
+.chead{padding:12px 13px 10px}
+.cname{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.cnum{font-size:11px;font-weight:700;color:var(--tx3);flex:none;min-width:14px}
+.cttl{font-size:15.5px;font-weight:700;letter-spacing:.01em;flex:1}
+.cchk{font-size:14px;color:var(--ok);flex:none}
+.cmeta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-left:21px}
+.tag{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.tag.rec{color:var(--ac);font-weight:700;font-size:13.5px}
+.tag.rpe{background:var(--dim);padding:1px 7px;border-radius:5px;font-size:11.5px}
+.prev{margin:6px 0 0 21px;font-size:11px;color:var(--tx3);line-height:1.5;
+  font-variant-numeric:tabular-nums}
+.prev b{color:var(--tx2);font-weight:600}
+.hint{margin:7px 0 0 21px}
+.hintb{display:inline-block;font-size:11.5px;font-weight:700;color:var(--warn);
+  border:1px solid #4a3a1a;background:#241d10;padding:3px 9px;border-radius:7px}
+.note{font-size:11.5px;color:var(--tx3);margin:6px 0 0 21px;line-height:1.5}
+.note.imp{color:#ff9a9a}
+
+/* ---- sets ---- */
+.sets{border-top:1px solid var(--line)}
+.srow{display:flex;align-items:center;gap:8px;padding:9px 13px;
+  border-bottom:1px solid rgba(42,47,58,.5);min-height:44px}
+.srow:last-child{border-bottom:none}
+.sidx{width:20px;flex:none;font-size:12px;font-weight:700;color:var(--tx3);
+  font-variant-numeric:tabular-nums}
+.sdone{background:rgba(57,192,122,.06)}
+.sdone .sidx{color:var(--ok)}
+.sval{flex:1;font-size:14.5px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.sval .u{color:var(--tx3);font-size:12px;margin:0 1px}
+.spend .sval{color:var(--tx3)}
+.sghost{font-size:10.5px;color:var(--tx3);text-align:right;flex:none;
+  font-variant-numeric:tabular-nums;opacity:.85;line-height:1.3}
+.srpe{font-size:12px;color:var(--tx2);background:var(--dim);padding:2px 7px;
+  border-radius:5px;flex:none;font-variant-numeric:tabular-nums}
+.sedit{width:30px;flex:none;text-align:center;color:var(--tx3);font-size:13px}
+
+/* active set editor */
+.sact{background:var(--card2);padding:11px 13px 12px;border-bottom:1px solid var(--line)}
+.sact .top{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.sact .top .sidx{color:var(--ac)}
+.stp{display:flex;align-items:center;gap:0;background:var(--bg);border-radius:10px;
+  border:1px solid var(--line);overflow:hidden;flex:1}
+.stp button{width:42px;height:42px;font-size:21px;font-weight:300;color:var(--tx2);
+  flex:none;display:flex;align-items:center;justify-content:center}
+.stp button:active{background:var(--dim)}
+.stp .fld{flex:1;text-align:center;min-width:0}
+.stp input{width:100%;text-align:center;font-size:19px;font-weight:700;
+  font-variant-numeric:tabular-nums;padding:0}
+.stp .lab{font-size:9.5px;color:var(--tx3);letter-spacing:.06em;margin-top:-3px}
+.rpebar{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px}
+.rpebar::-webkit-scrollbar{display:none}
+.rchip{flex:none;min-width:40px;height:34px;border-radius:8px;background:var(--bg);
+  border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--tx2);
+  display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.rchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.rchip.tgt:not(.on){border-color:var(--ac);color:var(--ac)}
+.rlab{font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-bottom:5px}
+.logbtn{width:100%;height:46px;border-radius:11px;background:var(--ac);color:#fff;
+  font-size:15.5px;font-weight:700;letter-spacing:.04em}
+.logbtn:active{opacity:.75}
+.logbtn.edit{background:var(--card);border:1px solid var(--ac);color:var(--ac)}
+
+/* ---- TS card ---- */
+.ts{background:linear-gradient(180deg,#1b2433,#181b22);border:1px solid #2d4260;
+  border-radius:14px;padding:13px;margin-bottom:12px}
+.ts h3{margin:0 0 3px;font-size:14.5px;letter-spacing:.02em}
+.ts .d{font-size:11.5px;color:var(--tx2);margin-bottom:10px;line-height:1.5}
+.ts .d b{color:var(--ac)}
+.ts .res{margin-top:10px;font-size:12.5px;color:var(--tx2);text-align:center;
+  background:rgba(74,158,255,.09);border-radius:9px;padding:8px}
+.ts .res b{color:var(--tx);font-size:16px;font-variant-numeric:tabular-nums}
+.ts .row{display:flex;gap:8px;align-items:center}
+.ts .logbtn{width:92px;flex:none;height:44px;font-size:14px}
+
+/* ---- misc ---- */
+.memo{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:11px 13px;font-size:13.5px;min-height:76px;resize:vertical;color:var(--tx);
+  font-family:inherit;line-height:1.5}
+.memo::placeholder{color:var(--tx3)}
+.mlabel{font-size:11px;color:var(--tx3);letter-spacing:.06em;margin:16px 0 6px 3px}
+.prog{height:3px;background:var(--dim);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);transition:width .25s}
+
+/* ---- rest timer ---- */
+#rest{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  padding:10px 12px calc(10px + var(--safe-b));
+  background:rgba(24,27,34,.97);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);display:none;align-items:center;gap:9px}
+#rest.on{display:flex}
+#rest .t{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;min-width:82px}
+#rest .t.zero{color:var(--ok)}
+#rest .n{flex:1;font-size:11.5px;color:var(--tx3);line-height:1.35}
+#rest button{height:40px;padding:0 13px;border-radius:9px;background:var(--card2);
+  font-size:13px;font-weight:600;color:var(--tx2);flex:none}
+#rest .bar{position:absolute;left:0;top:0;height:2px;background:var(--ac);transition:width 1s linear}
+
+/* ---- sheet ---- */
+#sheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none}
+#sheet.on{display:block}
+#sheet .in{position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;
+  background:var(--bg);border-radius:18px 18px 0 0;padding:16px 14px calc(26px + var(--safe-b));
+  border-top:1px solid var(--line)}
+#sheet h2{margin:0 0 14px;font-size:17px}
+.frow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.frow label{flex:1;font-size:13.5px}
+.frow .sub{display:block;font-size:11px;color:var(--tx3);margin-top:2px;line-height:1.45}
+.frow input{width:94px;text-align:center;font-size:17px;font-weight:700;background:var(--card2);
+  border-radius:9px;padding:9px;font-variant-numeric:tabular-nums;flex:none}
+.btn{width:100%;height:46px;border-radius:11px;background:var(--card2);font-size:14.5px;
+  font-weight:600;margin-top:10px}
+.btn.pri{background:var(--ac);color:#fff}
+.btn.dgr{color:#ff8080}
+#iojson{width:100%;height:150px;background:var(--card2);border-radius:11px;padding:11px;
+  font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--tx2);
+  margin-top:10px;resize:vertical}
+.toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%);
+  background:var(--ok);color:#06240f;padding:9px 18px;border-radius:999px;font-size:13px;
+  font-weight:700;z-index:90;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wkbar">
+    <button class="nav" id="wprev">‹</button>
+    <div class="wkttl"><b id="wttl">W1</b><span class="sub" id="wsub"></span></div>
+    <button class="nav" id="wnext">›</button>
+    <button class="ic" id="opencfg">⚙</button>
+  </div>
+  <div class="daytabs" id="daytabs"></div>
+  <div class="prog"><i id="progbar" style="width:0%"></i></div>
+</header>
+
+<div class="wrap" id="main"></div>
+
+<div id="rest">
+  <i class="bar" id="rbar" style="width:0%"></i>
+  <div class="t" id="rt">0:00</div>
+  <div class="n" id="rn"></div>
+  <button id="rplus">+30s</button>
+  <button id="rskip">スキップ</button>
+</div>
+
+<div id="sheet"><div class="in" id="sheetin"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   プログラム定義
+   ============================================================ */
+const RND = 2.5;
+
+// week: main[sets,reps,%,rpe] / narrow / pause / acc(補助セット増減) / dl(デロード)
+const WK = {
+ 1:{lb:'再導入',   main:[4,6,70,6.0],  narrow:[3,8,58,7.0], pause:[6,3,67,6.5], acc:0,  dl:0},
+ 2:{lb:'蓄積',     main:[4,6,73,6.5],  narrow:[3,8,60,7.0], pause:[6,3,69,6.5], acc:0,  dl:0},
+ 3:{lb:'蓄積',     main:[4,6,76,7.0],  narrow:[3,8,62,7.5], pause:[6,3,71,7.0], acc:0,  dl:0},
+ 4:{lb:'デロード', main:[3,5,70,5.5],  narrow:[2,8,56,6.0], pause:[4,3,65,6.0], acc:-1, dl:1},
+ 5:{lb:'筋肥大',   main:[4,5,77,7.0],  narrow:[3,6,65,7.0], pause:[5,3,72,6.5], acc:0,  dl:0},
+ 6:{lb:'筋肥大',   main:[4,5,79,7.5],  narrow:[3,6,67,7.5], pause:[5,3,74,7.0], acc:0,  dl:0},
+ 7:{lb:'筋肥大+',  main:[5,5,81,8.0],  narrow:[3,6,69,8.0], pause:[5,3,76,7.0], acc:1,  dl:0},
+ 8:{lb:'デロード', main:[3,4,74,6.0],  narrow:[2,6,62,6.0], pause:[4,3,68,6.0], acc:-1, dl:1},
+ 9:{lb:'筋力',     main:[4,3,84,7.0],  narrow:[3,5,70,7.5], pause:[6,2,78,7.0], acc:0,  dl:0},
+10:{lb:'筋力',     main:[5,3,86,8.0],  narrow:[3,5,72,8.0], pause:[6,2,80,7.0], acc:0,  dl:0},
+11:{lb:'筋力+',    main:[4,3,87,8.5],  narrow:[3,5,74,8.0], pause:[5,2,82,7.5], acc:-1, dl:0},
+12:{lb:'デロード', main:[3,3,78,5.5],  narrow:[2,5,65,6.0], pause:[3,2,72,6.0], acc:-2, dl:1},
+13:{lb:'テスト',   main:null, narrow:null, pause:null, acc:-1, dl:0}
+};
+// week -> [目標RPE, %1RM]（RPE換算表の1rep値に一致させてある）
+const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92],
+             8:[6,86],9:[7.5,90],10:[8,92],11:[8.5,94],12:[6,86],13:[10,100]};
+
+const DAYS = [
+  {id:'d1', lb:'Day1',  sub:'ジム60分 ベンチHeavy'},
+  {id:'d2', lb:'Day2',  sub:'自宅50分 肩・腕'},
+  {id:'d3', lb:'Day3',  sub:'ジム60分 ベンチVol＋脚'},
+  {id:'d4', lb:'Day4',  sub:'自宅50分 胸・背中'},
+  {id:'mC', lb:'朝C',   sub:'朝30分 ベンチ圧縮（Day3の代わりになる）'},
+  {id:'mA', lb:'朝A',   sub:'朝30分 脚＋コア'},
+  {id:'mB', lb:'朝B',   sub:'朝30分 背中＋肩'}
+];
+
+const S = (b,a,min)=>Math.max(min===undefined?2:min, b+a);
+const R = (b,dl)=>dl?Math.min(b,6.5):b;
+
+function buildDay(w, day){
+  const p = WK[w], a = p.acc, dl = p.dl, ts = TSP[w];
+  if(w===13) return testDay(day);
+  const E=[];
+  const push=(o)=>E.push(Object.assign({pct:null,unit:RND,note:'',rest:90},o));
+
+  if(day==='d1'){
+    push({n:'ベンチプレス｜トップシングル',s:1,r:1,pct:ts[1],rpe:ts[0],rest:180,ts:true,
+      note:dl?'デロード週：任意。やるなら軽く指標だけ':'指定RPEになる重量を自分で選んで1回。挙げたら下の欄に入力'});
+    push({n:'ベンチプレス｜メインセット',s:p.main[0],r:p.main[1],pct:p.main[2],rpe:p.main[3],rest:210,
+      note:'RPEを超えそうなら次セット5%down（下限は1set目の−10%）。下限でも超えるならそこで終了'});
+    push({n:'ローイングマシン',s:S(4,a),r:10,rpe:R(8,dl),rest:90,
+      note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
+    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rpe:R(8,dl),rest:60,unit:2.5,
+      note:'肘を体側で固定。気が向いた日は背を向けてオーバーヘッドでも可'});
+    push({n:'フェイスプル（任意）',s:S(3,a),r:15,rpe:R(7,dl),rest:45,opt:true});
+  }
+  if(day==='d2'){
+    push({n:'シーテッドDBショルダープレス',s:S(4,a),r:10,rpe:R(7.5,dl),rest:90,unit:1,
+      note:'背もたれ85度。立位でやらない（腰が反る）'});
+    push({n:'サイドレイズ',s:S(5,a),r:15,rpe:R(8,dl),rest:45,unit:1,
+      note:'肩幅を作る最重要種目。軽くていいので毎回やる'});
+    push({n:'DBカール',s:S(4,a),r:12,rpe:R(8,dl),rest:60,unit:1});
+    push({n:'ライイングDB トライセプスEX',s:S(3,a),r:12,rpe:R(8,dl),rest:60,unit:1,
+      note:'肘を固定して頭の後ろへ。長頭のストレッチ担当'});
+    push({n:'デッドバグ（任意）',s:3,r:8,rpe:7,rest:45,opt:true,nw:true,
+      note:'8回/側。腰と床の接地圧を抜かない'});
+  }
+  if(day==='d3'){
+    push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
+      note:'速度とフォームが目的。爆発的に挙げる。重くしない'});
+    push({n:'ナローベンチプレス',s:p.narrow[0],r:p.narrow[1],pct:p.narrow[2],rpe:p.narrow[3],rest:120,
+      note:'81cmライン内側。ロックアウト強化＝100kgの本命'});
+    push({n:'ラットプルダウン',s:S(4,a),r:10,rpe:R(8,dl),rest:90,
+      note:'肩甲骨を下げてから引く。耳と肩を遠ざける'});
+    push({n:'レッグプレス',s:S(3,a),r:12,rpe:R(7,dl),rest:120,unit:5,
+      imp:'骨盤が丸まる手前で止める（深くしゃがまない）。腰に来たら即中止'});
+    push({n:'レッグカール',s:S(3,a),r:15,rpe:R(8,dl),rest:60,
+      note:'ハム強化＝腰の保険'});
+  }
+  if(day==='d4'){
+    push({n:'インクラインDBプレス',s:S(4,a),r:10,rpe:R(8,dl),rest:90,unit:1,
+      note:'胸板の厚み担当。下ろしすぎない（顎の高さまで）'});
+    push({n:'懸垂（アシスト/ネガティブ）',s:S(4,a),r:null,rpe:R(8,dl),rest:120,nw:true,
+      imp:'腰を反らない。肋骨を下げ骨盤わずかに後傾のまま引く。反るならラットプルに替える'});
+    push({n:'ワンハンドDBロー',s:S(4,a),r:10,rpe:R(8,dl),rest:60,unit:1,
+      note:'片手をベンチについて体幹を支える。立位前傾でやらない'});
+    push({n:'サイドレイズ',s:S(3,a),r:15,rpe:R(8,dl),rest:45,unit:1});
+    push({n:'ハンマーカール',s:S(3,a),r:12,rpe:R(8,dl),rest:45,unit:1});
+  }
+  if(day==='mC'){
+    push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
+      note:'Day3と同一。これをやれば今週のベンチ週2は成立'});
+    push({n:'ナローベンチプレス',s:p.narrow[0],r:p.narrow[1],pct:p.narrow[2],rpe:p.narrow[3],rest:120});
+    push({n:'フェイスプル',s:3,r:15,rpe:R(7,dl),rest:45});
+  }
+  if(day==='mA'){
+    push({n:'レッグプレス',s:3,r:12,rpe:R(7,dl),rest:90,unit:5,
+      imp:'深くしゃがまない。腰に来たら即中止'});
+    push({n:'レッグカール',s:3,r:15,rpe:R(8,dl),rest:45});
+    push({n:'デッドバグ',s:3,r:8,rpe:7,rest:30,nw:true,note:'8回/側'});
+  }
+  if(day==='mB'){
+    push({n:'ラットプルダウン',s:4,r:10,rpe:R(8,dl),rest:75});
+    push({n:'ローイングマシン',s:3,r:12,rpe:R(8,dl),rest:75});
+    push({n:'サイドレイズ',s:3,r:15,rpe:R(8,dl),rest:45,unit:1});
+  }
+  return E;
+}
+function testDay(day){
+  const E=[];
+  const push=(o)=>E.push(Object.assign({pct:null,unit:RND,note:'',rest:90},o));
+  if(day==='d1'){
+    push({n:'試技①（W11のTS重量）',s:1,r:1,rpe:8,rest:300,note:'ウォームアップ：バー×10→40×5→50×3→60×2→ここへ'});
+    push({n:'試技②（＋2.5〜5kg）',s:1,r:1,rpe:9,rest:360});
+    push({n:'試技③（＋2.5kg）＝新1RM',s:1,r:1,rpe:9.5,rest:480,imp:'補助者をつける'});
+    push({n:'試技④（任意・＋2.5kg）',s:1,r:1,rpe:10,rest:480,opt:true,note:'フォームが崩れていない時だけ'});
+    push({n:'ダウン：ラットプルダウン',s:2,r:12,rpe:6,rest:60});
+  } else {
+    push({n:'インクラインDBプレス（軽め）',s:2,r:12,rpe:6,rest:90,unit:1,note:'回復優先。追い込まない'});
+    push({n:'ワンハンドDBロー（軽め）',s:2,r:12,rpe:6,rest:60,unit:1});
+    push({n:'デッドバグ',s:3,r:8,rpe:6,rest:45,nw:true,note:'8回/側'});
+  }
+  return E;
+}
+const RPES=[6,6.5,7,7.5,8,8.5,9,9.5,10];
+const RPED={10:'限界。もう1回も挙がらない',9.5:'あと1回いけるか微妙',9:'確実にあと1回',
+  8.5:'あと2回いけるか微妙',8:'確実にあと2回',7.5:'あと3回いけるか微妙',
+  7:'確実にあと3回。スピードも落ちない',6.5:'あと4回いけるか微妙',6:'確実にあと4回。W-upのように簡単'};
+
+/* ============================================================
+   状態
+   ============================================================ */
+const KEY='bench13_v1';
+const DEF={base:65, ts:{}, logs:{}, memo:{}, date:{}, w:1, d:'d1'};
+let st;
+try{ st=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ st=Object.assign({},DEF); }
+const save=()=>localStorage.setItem(KEY,JSON.stringify(st));
+const lk=(w,d,n)=>`W${w}|${d}|${n}`;
+const getLog=(w,d,n)=>st.logs[lk(w,d,n)]||[];
+const today=()=>{const t=new Date();return `${t.getFullYear()}/${String(t.getMonth()+1).padStart(2,'0')}/${String(t.getDate()).padStart(2,'0')}`;};
+
+let edit={};     // 種目名 -> 編集中のセットindex
+let draft={};    // 種目名 -> {kg,reps,rpe}
+
+/* 計算 */
+function e1rm(w){ const t=st.ts[w], p=TSP[w]; return (t&&p)? t/p[1]*100 : null; }
+function roundTo(x,u){ return Math.round(x/u)*u; }
+function recKg(w,ex){
+  if(ex.pct==null) return null;
+  if(ex.ts && st.ts[w]!=null) return st.ts[w];   // TSは実測値そのもの（丸めない）
+  const e=e1rm(w);
+  const raw = e!==null ? e*ex.pct/100 : st.base*ex.pct/100;
+  return roundTo(raw, ex.unit||RND);
+}
+/* 直近の同種目の記録を探す（今の週より前、同じ種目名） */
+function lastLog(w,d,name){
+  for(let ww=w; ww>=1; ww--){
+    const order = ww===w ? DAYS.map(x=>x.id).filter(x=>x!==d) : DAYS.map(x=>x.id);
+    // 同じ週は他のdayも見るが、まずは過去週を優先したいので同週は最後に
+    if(ww===w) continue;
+    for(const dd of order){
+      const l=st.logs[lk(ww,dd,name)];
+      if(l&&l.length) return {w:ww,d:dd,sets:l};
+    }
+  }
+  // 同週の別dayも最後に見る
+  for(const dd of DAYS.map(x=>x.id)){
+    if(dd===d) continue;
+    const l=st.logs[lk(w,dd,name)];
+    if(l&&l.length) return {w:w,d:dd,sets:l};
+  }
+  return null;
+}
+function dayLabel(id){ const x=DAYS.find(y=>y.id===id); return x?x.lb:id; }
+
+/* 既定値（入力の手間をゼロに近づける） */
+function defaults(w,d,ex,i){
+  const cur=getLog(w,d,ex.n);
+  if(cur[i]) return Object.assign({},cur[i]);
+  // 同一セッション内の直前セットを引き継ぐ
+  for(let j=i-1;j>=0;j--) if(cur[j]) return {kg:cur[j].kg, reps:ex.r||cur[j].reps, rpe:ex.rpe||cur[j].rpe};
+  const rec=recKg(w,ex);
+  if(rec!==null) return {kg:rec, reps:ex.r, rpe:ex.rpe};
+  const lp=lastLog(w,d,ex.n);
+  if(lp){ const b=lp.sets[Math.min(i,lp.sets.length-1)]; return {kg:b.kg, reps:ex.r||b.reps, rpe:ex.rpe}; }
+  return {kg:ex.nw?0:null, reps:ex.r||null, rpe:ex.rpe};
+}
+/* 漸進の提案：前回 全セット 目標reps達成 かつ 最大RPE<=目標 → +1刻み */
+function progHint(w,d,ex){
+  if(ex.pct!=null||ex.nw||!ex.r) return null;
+  const lp=lastLog(w,d,ex.n); if(!lp) return null;
+  if(lp.sets.length < ex.s) return null;
+  const ok = lp.sets.every(s=>s && s.reps>=ex.r && s.rpe<=ex.rpe && s.kg>0);
+  if(!ok) return null;
+  const u=ex.unit||RND;
+  return {kg: lp.sets[0].kg+u, u};
+}
+
+/* ============================================================
+   描画
+   ============================================================ */
+const $=(id)=>document.getElementById(id);
+const esc=(s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=(n)=>{ if(n===null||n===undefined||n==='') return '—'; const v=+n; return Number.isInteger(v)?String(v):v.toFixed(1); };
+
+function dayDone(w,d){
+  const E=buildDay(w,d).filter(e=>!e.opt);
+  if(!E.length) return false;
+  return E.every(e=>{ const l=getLog(w,d,e.n); return l.filter(Boolean).length>=e.s; });
+}
+
+function render(){
+  const w=st.w, d=st.d, p=WK[w];
+  $('wttl').textContent = `W${w}`;
+  const dInfo = DAYS.find(x=>x.id===d);
+  $('wsub').textContent = `${p.lb}　/　${dInfo.sub}${st.date[`W${w}|${d}`]?'　・'+st.date[`W${w}|${d}`]:''}`;
+
+  // day tabs
+  $('daytabs').innerHTML = DAYS.map(x=>
+    `<button class="dtab ${x.id===d?'on':''}" data-d="${x.id}">${x.lb}${dayDone(w,x.id)?'<i class="dot"></i>':''}</button>`
+  ).join('');
+  [...document.querySelectorAll('.dtab')].forEach(b=>b.onclick=()=>{st.d=b.dataset.d;edit={};draft={};save();render();window.scrollTo(0,0);});
+
+  const E=buildDay(w,d);
+  let html='';
+
+  if(p.dl) html+=`<div class="banner dl"><b>デロード週</b>　重量とセットを意図的に落としてあります。物足りなくて正解。ここで抜いた疲労が次の3週に効きます。</div>`;
+  if(w===13) html+=`<div class="banner test"><b>テスト週</b>　13週の答え合わせ。出た数字を設定の基準e1RMに入れると次のブロックが組めます。</div>`;
+
+  // TS カード
+  if(d==='d1'&&w<=12){
+    const [trpe,tpct]=TSP[w], guide=roundTo(st.base*tpct/100,RND), v=st.ts[w], e=e1rm(w);
+    html+=`<div class="ts">
+      <h3>トップシングル（今週の指標）</h3>
+      <div class="d">目標 <b>RPE ${trpe}</b>（${RPED[trpe]}）/ ${tpct}% ・ 目安 <b>${fmt(guide)}kg</b><br>
+      ウォームアップ後、この感覚になる重量を自分で選んで1回。<b>下の①に記録すれば、今週の全種目の重量がそれを基準に引き直ります。</b></div>
+      ${e!==null?`<div class="res">今週の e1RM　<b>${e.toFixed(1)} kg</b>　（TS ${fmt(v)}kg ÷ ${tpct}%）</div>`
+                :`<div class="res" style="color:var(--tx3)">未測定：基準 ${fmt(st.base)}kg からの暫定重量を表示中</div>`}
+    </div>`;
+  }
+  if((d==='d3'||d==='mC')&&w<=12){
+    const e=e1rm(w);
+    html+=`<div class="banner">${e!==null
+      ? `今週の e1RM <b>${e.toFixed(1)}kg</b>（W${w} Day1 のトップシングル ${fmt(st.ts[w])}kg から算出）`
+      : `今週のトップシングル未入力。Day1で測るまでは基準 <b>${fmt(st.base)}kg</b> ベースの暫定重量です`}</div>`;
+  }
+
+  // 種目
+  E.forEach((ex,ei)=>{
+    const log=getLog(w,d,ex.n);
+    const doneN=log.filter(Boolean).length;
+    const full=doneN>=ex.s;
+    const rec=recKg(w,ex);
+    const lp=lastLog(w,d,ex.n);
+    const hint=progHint(w,d,ex);
+    const act = edit[ex.n]!=null ? edit[ex.n] : (full?-1:doneN);
+
+    html+=`<div class="card ${full&&act<0?'done':''}">
+      <div class="chead">
+        <div class="cname">
+          <span class="cnum">${ei+1}</span>
+          <span class="cttl">${esc(ex.n)}</span>
+          ${full?'<span class="cchk">✓</span>':''}
+        </div>
+        <div class="cmeta">
+          <span class="tag">${ex.s} × ${ex.nw?(ex.r?ex.r:'限界'):ex.r}</span>
+          ${ex.rpe?`<span class="tag rpe">@${ex.rpe}</span>`:''}
+          ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
+          ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
+        </div>
+        ${lp?`<div class="prev"><b>前回 W${lp.w}·${dayLabel(lp.d)}</b>　${
+            lp.sets.filter(Boolean).map(s=>`${fmt(s.kg)}×${s.reps}${s.rpe?`<span style="opacity:.6">@${s.rpe}</span>`:''}`).join(' / ')
+          }</div>`:''}
+        ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">前回 全セット達成 → ${fmt(hint.kg)}kg に上げる</button></div>`:''}
+        ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
+      </div>
+      <div class="sets">`;
+
+    for(let i=0;i<ex.s;i++){
+      const s=log[i];
+      if(i===act){
+        const dft=draft[ex.n]&&draft[ex.n].i===i ? draft[ex.n] : Object.assign({i},defaults(w,d,ex,i));
+        draft[ex.n]=dft;
+        html+=`<div class="sact" data-ex="${ei}">
+          <div class="top">
+            <span class="sidx">${i+1}</span>
+            <div class="stp">
+              <button data-step="kg" data-dir="-1" data-ex="${ei}">−</button>
+              <div class="fld"><input class="fin" data-f="kg" data-ex="${ei}" inputmode="decimal" value="${dft.kg!=null?fmt(dft.kg):''}"><div class="lab">KG</div></div>
+              <button data-step="kg" data-dir="1" data-ex="${ei}">＋</button>
+            </div>
+            <div class="stp" style="max-width:150px">
+              <button data-step="reps" data-dir="-1" data-ex="${ei}">−</button>
+              <div class="fld"><input class="fin" data-f="reps" data-ex="${ei}" inputmode="numeric" value="${dft.reps!=null?dft.reps:''}"><div class="lab">REPS</div></div>
+              <button data-step="reps" data-dir="1" data-ex="${ei}">＋</button>
+            </div>
+          </div>
+          <div class="rlab">RPE — ${dft.rpe&&RPED[dft.rpe]?esc(RPED[dft.rpe]):'ラックに戻した直後の直感で'}</div>
+          <div class="rpebar">${RPES.map(r=>
+            `<button class="rchip ${dft.rpe===r?'on':''} ${ex.rpe===r?'tgt':''}" data-rpe="${r}" data-ex="${ei}">${r}</button>`).join('')}</div>
+          <button class="logbtn ${s?'edit':''}" data-log="${ei}">${s?'上書きして保存':'記録する'}</button>
+        </div>`;
+      } else if(s){
+        html+=`<div class="srow sdone" data-tap="${ei}:${i}">
+          <span class="sidx">${i+1}</span>
+          <span class="sval">${fmt(s.kg)}<span class="u">kg</span> × ${s.reps}</span>
+          ${s.rpe?`<span class="srpe">@${s.rpe}</span>`:''}
+          <span class="sedit">✎</span>
+        </div>`;
+      } else {
+        const dft=defaults(w,d,ex,i);
+        const g=lp&&lp.sets[i]?`前回 ${fmt(lp.sets[i].kg)}×${lp.sets[i].reps}`:'';
+        html+=`<div class="srow spend" data-tap="${ei}:${i}">
+          <span class="sidx">${i+1}</span>
+          <span class="sval">${dft.kg!=null?fmt(dft.kg):'—'}<span class="u">kg</span> × ${dft.reps||'—'}</span>
+          <span class="sghost">${g}</span>
+        </div>`;
+      }
+    }
+    html+=`</div></div>`;
+  });
+
+  html+=`<div class="mlabel">この日のメモ（音声メモの貼り付け先）</div>
+    <textarea class="memo" id="memo" placeholder="例）右肩が詰まる感じ。3set目から肘が開いた。">${esc(st.memo[`W${w}|${d}`]||'')}</textarea>`;
+
+  $('main').innerHTML=html;
+  bind(E);
+
+  const tot=E.filter(e=>!e.opt).reduce((a,e)=>a+e.s,0);
+  const got=E.filter(e=>!e.opt).reduce((a,e)=>a+Math.min(getLog(w,d,e.n).filter(Boolean).length,e.s),0);
+  $('progbar').style.width = tot? (got/tot*100)+'%' : '0%';
+}
+
+function bind(E){
+  const w=st.w, d=st.d;
+  const stepOf=(ex,f)=> f==='reps'?1:(ex.unit||RND);
+
+  document.querySelectorAll('[data-tap]').forEach(el=>el.onclick=()=>{
+    const [ei,i]=el.dataset.tap.split(':').map(Number);
+    edit[E[ei].n]=i; delete draft[E[ei].n]; render();
+  });
+  document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{
+    const ex=E[+b.dataset.ex], f=b.dataset.step, dir=+b.dataset.dir, dft=draft[ex.n];
+    const base = dft[f]==null?0:+dft[f];
+    let v = base + dir*stepOf(ex,f);
+    if(v<0) v=0;
+    dft[f] = f==='reps'? Math.round(v) : Math.round(v*100)/100;
+    render();
+  });
+  document.querySelectorAll('.fin').forEach(inp=>{
+    inp.onfocus=()=>inp.select();
+    inp.oninput=()=>{ const ex=E[+inp.dataset.ex]; const v=inp.value.trim();
+      draft[ex.n][inp.dataset.f] = v===''?null:(+v||0); };
+  });
+  document.querySelectorAll('[data-rpe]').forEach(b=>b.onclick=()=>{
+    const ex=E[+b.dataset.ex]; draft[ex.n].rpe=+b.dataset.rpe; render();
+  });
+  document.querySelectorAll('[data-hint]').forEach(b=>b.onclick=()=>{
+    const ex=E[+b.dataset.hint], h=progHint(w,d,ex);
+    if(!h) return;
+    const dft=draft[ex.n]; if(dft){ dft.kg=h.kg; render(); toast(`${fmt(h.kg)}kg にセット`); }
+  });
+  document.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>{
+    const ei=+b.dataset.log, ex=E[ei], dft=draft[ex.n], i=dft.i;
+    const k=lk(w,d,ex.n);
+    if(!st.logs[k]) st.logs[k]=[];
+    st.logs[k][i]={kg:dft.kg==null?0:+dft.kg, reps:dft.reps==null?0:+dft.reps, rpe:dft.rpe||null};
+    if(!st.date[`W${w}|${d}`]) st.date[`W${w}|${d}`]=today();
+    delete edit[ex.n]; delete draft[ex.n];
+    // トップシングルを記録したら今週のe1RMを更新し、全種目の下書きを破棄して引き直す
+    if(ex.ts){ st.ts[w]=+dft.kg||0; draft={}; }
+    save();
+    const done=st.logs[k].filter(Boolean).length;
+    if(done<ex.s) startRest(ex.rest, `${ex.n}　${done}/${ex.s} 完了`);
+    else if(ex.ts){ startRest(ex.rest,'トップシングル完了・メインセットへ'); toast(`e1RM ${e1rm(w).toFixed(1)}kg → 全重量に反映`); }
+    else { stopRest(); toast(`${ex.n} 完了`); }
+    render();
+  });
+  const m=$('memo');
+  if(m) m.onchange=()=>{ st.memo[`W${w}|${d}`]=m.value; save(); };
+}
+
+/* ============================================================
+   休憩タイマー
+   ============================================================ */
+let rEnd=0, rTot=0, rTick=null;
+function startRest(sec,label){
+  if(!sec) return;
+  rTot=sec; rEnd=Date.now()+sec*1000;
+  $('rn').textContent=label||'';
+  $('rest').classList.add('on');
+  clearInterval(rTick); rTick=setInterval(tickRest,250); tickRest();
+}
+function stopRest(){ clearInterval(rTick); rTick=null; $('rest').classList.remove('on'); }
+function tickRest(){
+  const left=Math.max(0,Math.round((rEnd-Date.now())/1000));
+  const el=$('rt');
+  el.textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;
+  el.classList.toggle('zero',left===0);
+  $('rbar').style.width = rTot? (left/rTot*100)+'%':'0%';
+  if(left===0 && rTick){ clearInterval(rTick); rTick=null; beep(); }
+}
+$('rplus').onclick=()=>{ rEnd+=30000; rTot+=30; if(!rTick) rTick=setInterval(tickRest,250); tickRest(); };
+$('rskip').onclick=stopRest;
+function beep(){
+  try{ navigator.vibrate&&navigator.vibrate([180,90,180]); }catch(e){}
+  try{
+    const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+    const a=new C(), o=a.createOscillator(), g=a.createGain();
+    o.connect(g); g.connect(a.destination); o.frequency.value=880; o.type='sine';
+    g.gain.setValueAtTime(.0001,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.25,a.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.6);
+    o.start(); o.stop(a.currentTime+.62);
+  }catch(e){}
+}
+
+/* ============================================================
+   設定シート
+   ============================================================ */
+$('opencfg').onclick=()=>{
+  $('sheetin').innerHTML=`
+    <h2>設定とデータ</h2>
+    <div class="frow"><label>基準 e1RM（kg）
+      <span class="sub">トップシングル未入力の週の計算に使う土台。W1で測ったら更新する。</span></label>
+      <input id="cbase" inputmode="decimal" value="${fmt(st.base)}"></div>
+    <button class="btn pri" id="csave">保存</button>
+    <div class="mlabel">バックアップ / 引き継ぎ</div>
+    <textarea id="iojson" placeholder="ここに貼って「読み込み」で復元">${esc(JSON.stringify(st))}</textarea>
+    <button class="btn" id="ccopy">全データをコピー（Claudeに貼れば集計できます）</button>
+    <button class="btn" id="cload">上のテキストを読み込み</button>
+    <div class="mlabel">危険な操作</div>
+    <button class="btn dgr" id="cclear">記録をすべて消去</button>
+    <button class="btn" id="cclose" style="margin-top:18px">閉じる</button>`;
+  $('sheet').classList.add('on');
+  $('csave').onclick=()=>{ const v=+$('cbase').value; if(v>0){st.base=v;draft={};save();render();toast('保存しました');} };
+  $('ccopy').onclick=()=>{ const t=$('iojson'); t.select();
+    navigator.clipboard?navigator.clipboard.writeText(t.value).then(()=>toast('コピーしました')):(document.execCommand('copy'),toast('コピーしました')); };
+  $('cload').onclick=()=>{ try{ const o=JSON.parse($('iojson').value);
+    st=Object.assign({},DEF,o); save(); render(); $('sheet').classList.remove('on'); toast('読み込みました');
+  }catch(e){ alert('JSONが読めませんでした'); } };
+  $('cclear').onclick=()=>{ if(confirm('すべての記録を消します。元に戻せません。'))
+    { st=Object.assign({},DEF); save(); render(); $('sheet').classList.remove('on'); } };
+  $('cclose').onclick=()=>$('sheet').classList.remove('on');
+};
+$('sheet').onclick=(e)=>{ if(e.target.id==='sheet') $('sheet').classList.remove('on'); };
+
+let tto=null;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(tto); tto=setTimeout(()=>t.classList.remove('on'),1500); }
+
+/* 週移動 */
+$('wprev').onclick=()=>{ if(st.w>1){st.w--;edit={};draft={};save();render();window.scrollTo(0,0);} };
+$('wnext').onclick=()=>{ if(st.w<13){st.w++;edit={};draft={};save();render();window.scrollTo(0,0);} };
+
+render();
+</script>
+</body>
+</html>
