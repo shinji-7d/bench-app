@@ -231,13 +231,13 @@ const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92
              8:[6,86],9:[7.5,90],10:[8,92],11:[8.5,94],12:[6,86],13:[10,100]};
 
 const DAYS = [
-  {id:'d1', lb:'Day1',  sub:'ジム60分 ベンチHeavy'},
-  {id:'d2', lb:'Day2',  sub:'自宅50分 肩・腕'},
-  {id:'d3', lb:'Day3',  sub:'ジム60分 ベンチVol＋脚'},
-  {id:'d4', lb:'Day4',  sub:'自宅50分 胸・背中'},
-  {id:'mC', lb:'朝ベンチ', sub:'朝30分 ベンチ圧縮（Day3の代わりになる）'},
-  {id:'mA', lb:'朝 脚',   sub:'朝30分 脚＋コア'},
-  {id:'mB', lb:'朝 背中', sub:'朝30分 背中＋肩'}
+  {id:'d4', lb:'月 朝ジム', sub:'月｜朝30分ジム　胸・背中'},
+  {id:'d1', lb:'水 ベンチH', sub:'水｜ジム60分　ベンチHeavy＋背中＋三頭'},
+  {id:'d2', lb:'木 朝ジム', sub:'木｜朝30分ジム　肩・腕'},
+  {id:'d3', lb:'土 ベンチV', sub:'土｜ジム60分　ベンチVolume＋ナロー＋背中＋脚'},
+  {id:'mA', lb:'家 10分',   sub:'いつでも｜自宅ダンベル10分　週2〜3回やれば肩幅が変わる'},
+  {id:'mC', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　土に行けない週の代替'},
+  {id:'mB', lb:'＋朝 脚',   sub:'任意｜朝30分ジム　脚＋コア（余力のある週だけ）'}
 ];
 
 const S = (b,a,min)=>Math.max(min===undefined?2:min, b+a);
@@ -261,15 +261,13 @@ function buildDay(w, day){
     push({n:'フェイスプル（任意）',s:S(3,a),r:15,rpe:R(7,dl),rest:45,opt:true});
   }
   if(day==='d2'){
-    push({n:'シーテッドDBショルダープレス',s:S(4,a),r:10,rpe:R(7.5,dl),rest:90,unit:1,
+    push({n:'シーテッドDBショルダープレス',s:S(3,a),r:10,rpe:R(7.5,dl),rest:75,unit:1,
       note:'背もたれ85度。立位でやらない（腰が反る）'});
-    push({n:'サイドレイズ',s:S(5,a),r:15,rpe:R(8,dl),rest:45,unit:1,
-      note:'肩幅を作る最重要種目。軽くていいので毎回やる'});
-    push({n:'DBカール',s:S(4,a),r:12,rpe:R(8,dl),rest:60,unit:1});
-    push({n:'ライイングDB トライセプスEX',s:S(3,a),r:12,rpe:R(8,dl),rest:60,unit:1,
-      note:'肘を固定して頭の後ろへ。長頭のストレッチ担当'});
-    push({n:'デッドバグ（任意）',s:3,r:8,rpe:7,rest:45,opt:true,nw:true,
-      note:'8回/側。腰と床の接地圧を抜かない'});
+    push({n:'サイドレイズ',s:S(4,a),r:15,rpe:R(8,dl),rest:45,unit:1,
+      note:'肩幅を作る最重要種目。軽くていいので必ずやる'});
+    push({n:'リアレイズ',s:S(3,a),r:15,rpe:R(8,dl),rest:45,unit:1,
+      note:'肩の後ろ側。巻き肩対策＝ベンチの安全装置'});
+    push({n:'DBカール',s:S(3,a),r:12,rpe:R(8,dl),rest:45,unit:1});
   }
   if(day==='d3'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
@@ -284,31 +282,30 @@ function buildDay(w, day){
       note:'ハム強化＝腰の保険'});
   }
   if(day==='d4'){
-    push({n:'インクラインDBプレス',s:S(4,a),r:10,rpe:R(8,dl),rest:90,unit:1,
-      note:'胸板の厚み担当。下ろしすぎない（顎の高さまで）'});
-    push({n:'懸垂（アシスト/ネガティブ）',s:S(4,a),r:null,rpe:R(8,dl),rest:120,nw:true,
-      imp:'腰を反らない。肋骨を下げ骨盤わずかに後傾のまま引く。反るならラットプルに替える'});
-    push({n:'ワンハンドDBロー',s:S(4,a),r:10,rpe:R(8,dl),rest:60,unit:1,
-      note:'片手をベンチについて体幹を支える。立位前傾でやらない'});
-    push({n:'サイドレイズ',s:S(3,a),r:15,rpe:R(8,dl),rest:45,unit:1});
-    push({n:'ハンマーカール',s:S(3,a),r:12,rpe:R(8,dl),rest:45,unit:1});
+    push({n:'インクラインDBプレス',s:S(3,a),r:10,rpe:R(8,dl),rest:75,unit:1,
+      note:'胸板の厚み担当。下ろしすぎない（最大で顎の高さまで）'});
+    push({n:'ローイングマシン',s:S(4,a),r:10,rpe:R(8,dl),rest:75,
+      note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
+    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rpe:R(8,dl),rest:45,
+      note:'@8で止める。限界までやらない（2日後のベンチに残る）'});
   }
   if(day==='mC'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
-      note:'Day3と同一。これをやれば今週のベンチ週2は成立'});
+      note:'土のジム回と同一設定。これをやれば今週のベンチ週2は成立'});
     push({n:'ナローベンチプレス',s:p.narrow[0],r:p.narrow[1],pct:p.narrow[2],rpe:p.narrow[3],rest:120});
     push({n:'フェイスプル',s:3,r:15,rpe:R(7,dl),rest:45});
   }
   if(day==='mA'){
+    push({n:'サイドレイズ',s:3,r:15,rpe:R(8,dl),rest:45,unit:1,
+      note:'4〜6kgで十分。肩幅はここで作る。週2〜3回やれば見た目が変わる'});
+    push({n:'DBカール',s:2,r:12,rpe:R(8,dl),rest:45,unit:1,
+      note:'時間があれば。無ければサイドレイズだけで成立する'});
+  }
+  if(day==='mB'){
     push({n:'レッグプレス',s:3,r:12,rpe:R(7,dl),rest:90,unit:5,
       imp:'深くしゃがまない。腰に来たら即中止'});
     push({n:'レッグカール',s:3,r:15,rpe:R(8,dl),rest:45});
     push({n:'デッドバグ',s:3,r:8,rpe:7,rest:30,nw:true,note:'8回/側'});
-  }
-  if(day==='mB'){
-    push({n:'ラットプルダウン',s:4,r:10,rpe:R(8,dl),rest:75});
-    push({n:'ローイングマシン',s:3,r:12,rpe:R(8,dl),rest:75});
-    push({n:'サイドレイズ',s:3,r:15,rpe:R(8,dl),rest:45,unit:1});
   }
   return E;
 }
@@ -660,6 +657,7 @@ $('wprev').onclick=()=>{ if(st.w>1){st.w--;edit={};draft={};save();render();wind
 $('wnext').onclick=()=>{ if(st.w<13){st.w++;edit={};draft={};save();render();window.scrollTo(0,0);} };
 
 render();
+
 </script>
 </body>
 </html>
