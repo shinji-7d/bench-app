@@ -261,16 +261,16 @@ function buildDay(w, day){
       note:'RPEを超えそうなら次セット5%down（下限は1set目の−10%）。下限でも超えるならそこで終了'});
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,rpe:R(8,dl),rest:60,
+    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(8,dl),rest:60,
       note:'肘を体側で固定。気が向いた日は背を向けてオーバーヘッドでも可'});
-    push({n:'フェイスプル（任意）',s:S(3,a),r:15,rx:20,unit:5,rpe:R(7,dl),rest:45,opt:true});
+    push({n:'フェイスプル（任意）',s:S(3,a),r:15,rx:20,unit:5,iso:1,rpe:R(7,dl),rest:45,opt:true});
   }
   if(day==='d2'){
     push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,unit:1,rpe:R(8,dl),rest:75,
       note:'胸板の厚み担当。下ろしすぎない（最大で顎の高さまで）'});
-    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,unit:1,rpe:R(8,dl),rest:45,
+    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
       note:'肩の後ろ側。巻き肩対策＝ベンチの安全装置'});
-    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,rpe:R(8,dl),rest:45,
+    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(8,dl),rest:45,
       note:'@8で止める。限界までやらない'});
   }
   if(day==='d3'){
@@ -282,35 +282,35 @@ function buildDay(w, day){
       note:'肩甲骨を下げてから引く。耳と肩を遠ざける'});
     push({n:'レッグプレス',s:S(3,a),r:12,rx:15,unit:10,rpe:R(7,dl),rest:120,
       imp:'骨盤が丸まる手前で止める（深くしゃがまない）。腰に来たら即中止'});
-    push({n:'レッグカール',s:S(3,a),r:15,rx:20,unit:5,rpe:R(8,dl),rest:60,
+    push({n:'レッグカール',s:S(3,a),r:15,rx:20,unit:5,iso:1,rpe:R(8,dl),rest:60,
       note:'ハム強化＝腰の保険'});
   }
   if(day==='d4'){
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:75,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:1,rpe:R(8,dl),rest:45,
+    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
       note:'肩幅を作る最重要種目。軽くていいので必ずやる'});
-    push({n:'DBカール',s:S(3,a),r:12,rx:15,unit:1,rpe:R(8,dl),rest:45,
+    push({n:'DBカール',s:S(3,a),r:12,rx:15,unit:1,iso:1,rpe:R(8,dl),rest:45,
       imp:'ここまで全部「引く」動作。水のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
   }
   if(day==='mC'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
       note:'土のジム回と同一設定。これをやれば今週のベンチ週2は成立'});
     push({n:'ナローベンチプレス',s:p.narrow[0],r:p.narrow[1],pct:p.narrow[2],rpe:p.narrow[3],rest:120});
-    push({n:'フェイスプル',s:3,r:15,rx:20,unit:5,rpe:R(7,dl),rest:45});
+    push({n:'フェイスプル',s:3,r:15,rx:20,unit:5,iso:1,rpe:R(7,dl),rest:45});
   }
   if(day==='mA'||day==='mD'){
-    push({n:'サイドレイズ',s:3,r:15,rx:20,steps:HOME,rpe:R(8,dl),rest:45,
-      note:'4〜6kgで十分。肩幅はここで作る'});
-    push({n:'ハンマーカール',s:3,r:12,rx:15,steps:HOME,rpe:R(8,dl),rest:45,
+    push({n:'サイドレイズ',s:3,r:15,rx:20,steps:HOME,iso:1,rpe:R(8,dl),rest:60,
+      note:'5.5kgから。肩がすくんだら終了。肩幅はここで作る'});
+    push({n:'ハンマーカール',s:3,r:12,rx:15,steps:HOME,iso:1,rpe:R(8,dl),rest:60,
       note:'二頭＋前腕（腕橈骨筋）を同時に。腕が太く見えるのはここ'});
-    push({n:'リストカール',s:2,r:20,rx:25,steps:HOME,rpe:R(8,dl),rest:30,
-      note:'前腕。前腕を膝かベンチに乗せ、手首だけを動かす。軽くて高回数でOK'});
+    push({n:'リストカール',s:2,r:15,rx:20,steps:HOME,iso:1,rpe:R(8,dl),rest:45,
+      note:'前腕。9〜11.5kgから。40回出るのは軽すぎ。肘が動いたら終了'});
   }
   if(day==='mB'){
     push({n:'レッグプレス',s:3,r:12,rx:15,unit:10,rpe:R(7,dl),rest:90,
       imp:'深くしゃがまない。腰に来たら即中止'});
-    push({n:'レッグカール',s:3,r:15,rx:20,unit:5,rpe:R(8,dl),rest:45});
+    push({n:'レッグカール',s:3,r:15,rx:20,unit:5,iso:1,rpe:R(8,dl),rest:45});
     push({n:'デッドバグ',s:3,r:8,rpe:7,rest:30,nw:true,note:'8回/側'});
   }
   return E;
@@ -422,16 +422,16 @@ function progHint(w,d,ex){
   const lp=lastLog(w,d,ex.n); if(!lp) return null;
   if(lp.sets.length < ex.s) return null;
   if(!lp.sets.every(s=>s && s.kg>0)) return null;
-  // 上げる時は一番軽いセットを基準に（全セットを新重量で揃えられるように）
-  if(lp.sets.every(s=>s.reps>=ex.rx && s.rpe<=ex.rpe))
-    return {type:'up', kg: stepUp(ex, Math.min(...lp.sets.map(s=>s.kg))), reps: ex.r};
-  // レップを伸ばす時は最終セットの重量を基準に（最後まで維持できた重量）
+  // 単関節(iso)はRPEがブレるのでレップだけで判定する
+  const rpeOK = s => ex.iso ? true : s.rpe<=ex.rpe;
+  // 基準は常に「最終セットで扱えた重量」＝疲労した状態でも維持できた重量
+  const base = lp.sets[lp.sets.length-1].kg;
+  // 全セットがレンジ上限に到達 → 1段階上げてレップを下限に戻す
+  if(lp.sets.every(s=>s.reps>=ex.rx && rpeOK(s)))
+    return {type:'up', kg: stepUp(ex, base), reps: ex.r};
+  // まだ揃っていない → 重量そのままでレップを伸ばす
   const top = Math.max(...lp.sets.map(s=>s.reps));
-  if(top < ex.rx){
-    const base = lp.sets[lp.sets.length-1].kg;
-    return {type:'reps', kg: base, reps: Math.min(ex.rx, top+1), nextKg: stepUp(ex, base)};
-  }
-  return null;
+  return {type:'reps', kg: base, reps: Math.min(ex.rx, top+1), nextKg: stepUp(ex, base)};
 }
 
 /* ============================================================
@@ -545,7 +545,9 @@ function render(){
               <button data-step="reps" data-dir="1" data-ex="${ei}">＋</button>
             </div>
           </div>
-          <div class="rlab">RPE — ${dft.rpe&&RPED[dft.rpe]?esc(RPED[dft.rpe]):'ラックに戻した直後の直感で'}</div>
+          <div class="rlab">${ex.iso
+            ? 'RPE — 記録用の目安。フォームが崩れたら終了＝@9。進行の判定には使いません'
+            : `RPE — ${dft.rpe&&RPED[dft.rpe]?esc(RPED[dft.rpe]):'ラックに戻した直後の直感で'}`}</div>
           <div class="rpebar">${RPES.map(r=>
             `<button class="rchip ${dft.rpe===r?'on':''} ${ex.rpe===r?'tgt':''}" data-rpe="${r}" data-ex="${ei}">${r}</button>`).join('')}</div>
           <button class="logbtn ${s?'edit':''}" data-log="${ei}">${s?'上書きして保存':'記録する'}</button>
