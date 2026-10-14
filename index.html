@@ -211,6 +211,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
    プログラム定義
    ============================================================ */
 const RND = 2.5;
+/* 自宅の可変ダンベル（実在する重量のみ） */
+const HOME=[2.5,3.5,4.5,5.5,6.5,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
 
 // week: main[sets,reps,%,rpe] / narrow / pause / acc(補助セット増減) / dl(デロード)
 const WK = {
@@ -233,13 +235,13 @@ const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92
              8:[6,86],9:[7.5,90],10:[8,92],11:[8.5,94],12:[6,86],13:[10,100]};
 
 const DAYS = [
-  {id:'d2', lb:'月 朝ジム', sub:'月｜朝30分ジム　胸・肩後部・三頭（押す日）'},
-  {id:'d3', lb:'水 ベンチV', sub:'水｜ジム60分　ベンチVolume＋ナロー＋背中＋脚　※TSは測らないので前夜に多少飲んでも影響が小さい日'},
-  {id:'d4', lb:'木 朝ジム', sub:'木｜朝30分ジム　背中・肩側部・二頭（引く日）　※押す筋肉は使わない（土のベンチを守る）'},
-  {id:'d1', lb:'土 ベンチH', sub:'土｜ジム60分　ベンチHeavy＋背中＋三頭　★TSを測る日。前夜（金）は飲まない'},
-  {id:'mA', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※木の夜だけは部位がかぶるのでNG'},
+  {id:'d4', lb:'月 朝ジム', sub:'月｜朝30分ジム　背中・肩側部・二頭（引く日）　※押す筋肉は使わない（水のベンチを守る）'},
+  {id:'d1', lb:'水 ベンチH', sub:'水｜ジム60分　ベンチHeavy＋背中＋三頭　★TSを測る日。火に飲んだ翌日は無理に測らず空欄でOK'},
+  {id:'d2', lb:'木 朝ジム', sub:'木｜朝30分ジム　胸・肩後部・三頭（押す日）'},
+  {id:'d3', lb:'土 ベンチV', sub:'土｜ジム60分　ベンチVolume＋ナロー＋背中＋脚　※TSを測らないので前夜に多少飲んでも影響が小さい日'},
+  {id:'mA', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※月の夜だけは部位がかぶるのでNG'},
   {id:'mD', lb:'家② 15分',  sub:'2回目｜土の夜が目安　内容は家①と同じ。全部やらなくてよい（週の合計で足りればOK）'},
-  {id:'mC', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　水に行けない週の代替（ポーズベンチ＋ナロー）'},
+  {id:'mC', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　土に行けない週の代替（ポーズベンチ＋ナロー）'},
   {id:'mB', lb:'＋朝 脚',   sub:'任意｜朝30分ジム　脚＋コア（余力のある週だけ）'}
 ];
 
@@ -264,9 +266,9 @@ function buildDay(w, day){
     push({n:'フェイスプル（任意）',s:S(3,a),r:15,rx:20,unit:5,rpe:R(7,dl),rest:45,opt:true});
   }
   if(day==='d2'){
-    push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,unit:2,rpe:R(8,dl),rest:75,
+    push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,unit:1,rpe:R(8,dl),rest:75,
       note:'胸板の厚み担当。下ろしすぎない（最大で顎の高さまで）'});
-    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,unit:2,rpe:R(8,dl),rest:45,
+    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,unit:1,rpe:R(8,dl),rest:45,
       note:'肩の後ろ側。巻き肩対策＝ベンチの安全装置'});
     push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,rpe:R(8,dl),rest:45,
       note:'@8で止める。限界までやらない'});
@@ -286,23 +288,23 @@ function buildDay(w, day){
   if(day==='d4'){
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:75,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:2,rpe:R(8,dl),rest:45,
+    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:1,rpe:R(8,dl),rest:45,
       note:'肩幅を作る最重要種目。軽くていいので必ずやる'});
-    push({n:'DBカール',s:S(3,a),r:12,rx:15,unit:2,rpe:R(8,dl),rest:45,
-      imp:'ここまで全部「引く」動作。土のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
+    push({n:'DBカール',s:S(3,a),r:12,rx:15,unit:1,rpe:R(8,dl),rest:45,
+      imp:'ここまで全部「引く」動作。水のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
   }
   if(day==='mC'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
-      note:'水のジム回と同一設定。これをやれば今週のベンチ週2は成立'});
+      note:'土のジム回と同一設定。これをやれば今週のベンチ週2は成立'});
     push({n:'ナローベンチプレス',s:p.narrow[0],r:p.narrow[1],pct:p.narrow[2],rpe:p.narrow[3],rest:120});
     push({n:'フェイスプル',s:3,r:15,rx:20,unit:5,rpe:R(7,dl),rest:45});
   }
   if(day==='mA'||day==='mD'){
-    push({n:'サイドレイズ',s:3,r:15,rx:20,unit:1,rpe:R(8,dl),rest:45,
+    push({n:'サイドレイズ',s:3,r:15,rx:20,steps:HOME,rpe:R(8,dl),rest:45,
       note:'4〜6kgで十分。肩幅はここで作る'});
-    push({n:'ハンマーカール',s:3,r:12,rx:15,unit:1,rpe:R(8,dl),rest:45,
+    push({n:'ハンマーカール',s:3,r:12,rx:15,steps:HOME,rpe:R(8,dl),rest:45,
       note:'二頭＋前腕（腕橈骨筋）を同時に。腕が太く見えるのはここ'});
-    push({n:'リストカール',s:2,r:20,rx:25,unit:1,rpe:R(8,dl),rest:30,
+    push({n:'リストカール',s:2,r:20,rx:25,steps:HOME,rpe:R(8,dl),rest:30,
       note:'前腕。前腕を膝かベンチに乗せ、手首だけを動かす。軽くて高回数でOK'});
   }
   if(day==='mB'){
@@ -357,6 +359,19 @@ function e1rmAt(w){
 }
 function e1rm(w){ const r=e1rmAt(w); return r? r.v : null; }
 function roundTo(x,u){ return Math.round(x/u)*u; }
+/* 自宅の可変ダンベルは等間隔でないので、実在する重量だけを行き来させる */
+function stepUp(ex,v){
+  if(ex.steps){ const n=ex.steps.find(x=>x>v+1e-9); return n===undefined? ex.steps[ex.steps.length-1] : n; }
+  return v+(ex.unit||RND);
+}
+function stepDown(ex,v){
+  if(ex.steps){ const a=ex.steps.filter(x=>x<v-1e-9); return a.length? a[a.length-1] : ex.steps[0]; }
+  return Math.max(0, v-(ex.unit||RND));
+}
+function snap(ex,v){
+  if(!ex.steps) return roundTo(v, ex.unit||RND);
+  return ex.steps.reduce((b,x)=>Math.abs(x-v)<Math.abs(b-v)?x:b, ex.steps[0]);
+}
 function recKg(w,ex){
   if(ex.pct==null) return null;
   if(ex.ts && st.ts[w]!=null) return st.ts[w];   // TSは実測値そのもの（丸めない）
@@ -393,6 +408,8 @@ function defaults(w,d,ex,i){
   for(let j=i-1;j>=0;j--) if(cur[j]) return {kg:cur[j].kg, reps:cur[j].reps||ex.r, rpe:ex.rpe||cur[j].rpe};
   const rec=recKg(w,ex);
   if(rec!==null) return {kg:rec, reps:ex.r, rpe:ex.rpe};
+  const h=progHint(w,d,ex);                       // 前回実績からの提案をそのまま初期値にする
+  if(h) return {kg:h.kg, reps:h.reps, rpe:ex.rpe};
   const lp=lastLog(w,d,ex.n);
   if(lp){ const b=lp.sets[Math.min(i,lp.sets.length-1)]; return {kg:b.kg, reps:b.reps||ex.r, rpe:ex.rpe}; }
   return {kg:ex.nw?0:null, reps:ex.r||null, rpe:ex.rpe};
@@ -405,14 +422,15 @@ function progHint(w,d,ex){
   const lp=lastLog(w,d,ex.n); if(!lp) return null;
   if(lp.sets.length < ex.s) return null;
   if(!lp.sets.every(s=>s && s.kg>0)) return null;
-  const u=ex.unit||RND;
   // 上げる時は一番軽いセットを基準に（全セットを新重量で揃えられるように）
   if(lp.sets.every(s=>s.reps>=ex.rx && s.rpe<=ex.rpe))
-    return {type:'up', kg: Math.min(...lp.sets.map(s=>s.kg))+u, reps: ex.r, u};
+    return {type:'up', kg: stepUp(ex, Math.min(...lp.sets.map(s=>s.kg))), reps: ex.r};
   // レップを伸ばす時は最終セットの重量を基準に（最後まで維持できた重量）
   const top = Math.max(...lp.sets.map(s=>s.reps));
-  if(top < ex.rx)
-    return {type:'reps', kg: lp.sets[lp.sets.length-1].kg, reps: Math.min(ex.rx, top+1), u};
+  if(top < ex.rx){
+    const base = lp.sets[lp.sets.length-1].kg;
+    return {type:'reps', kg: base, reps: Math.min(ex.rx, top+1), nextKg: stepUp(ex, base)};
+  }
   return null;
 }
 
@@ -468,9 +486,9 @@ function render(){
     const er=e1rmAt(w);
     html+=`<div class="banner">${er
       ? (er.from===w
-          ? `今週の e1RM <b>${er.v.toFixed(1)}kg</b>（土のトップシングル ${fmt(st.ts[w])}kg から算出）`
-          : `<b>W${er.from}</b> のトップシングル ${fmt(st.ts[er.from])}kg から算出した e1RM <b>${er.v.toFixed(1)}kg</b> で計算しています。今週の土で測り直せば更新されます`)
-      : `トップシングル未測定。土で測るまでは基準 <b>${fmt(st.base)}kg</b> ベースの暫定重量です`}</div>`;
+          ? `今週の e1RM <b>${er.v.toFixed(1)}kg</b>（水のトップシングル ${fmt(st.ts[w])}kg から算出）`
+          : `<b>W${er.from}</b> のトップシングル ${fmt(st.ts[er.from])}kg から算出した e1RM <b>${er.v.toFixed(1)}kg</b> で計算しています。今週の水で測り直せば更新されます`)
+      : `トップシングル未測定。水で測るまでは基準 <b>${fmt(st.base)}kg</b> ベースの暫定重量です`}</div>`;
   }
 
   // 種目
@@ -501,8 +519,8 @@ function render(){
           }</div>`:''}
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
             hint.type==='up'
-              ? `前回 全セット${ex.rx}回達成 → <b>${fmt(hint.kg)}kg × ${ex.r}回</b> から再開`
-              : `重量そのまま <b>${fmt(hint.kg)}kg</b>、レップを <b>${hint.reps}回</b> へ（${ex.rx}回×全セットで +${fmt(hint.u)}kg）`
+              ? `前回 全セット${ex.rx}回達成 → <b>${fmt(hint.kg)}kg × ${ex.r}回</b> へ上げる`
+              : `<b>${fmt(hint.kg)}kg × ${hint.reps}回</b> を狙う（${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`
           }</button></div>`:''}
         ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
       </div>
@@ -574,9 +592,12 @@ function bind(E){
   document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{
     const ex=E[+b.dataset.ex], f=b.dataset.step, dir=+b.dataset.dir, dft=draft[ex.n];
     const base = dft[f]==null?0:+dft[f];
-    let v = base + dir*stepOf(ex,f);
-    if(v<0) v=0;
-    dft[f] = f==='reps'? Math.round(v) : Math.round(v*100)/100;
+    if(f==='reps'){
+      dft.reps = Math.max(0, Math.round(base + dir));
+    } else {
+      const v = dir>0 ? stepUp(ex, base) : stepDown(ex, base);
+      dft.kg = Math.round(Math.max(0,v)*100)/100;
+    }
     render();
   });
   document.querySelectorAll('.fin').forEach(inp=>{
