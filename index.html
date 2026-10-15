@@ -405,22 +405,29 @@ function dayLabel(id){ const x=DAYS.find(y=>y.id===id); return x?x.lb:id; }
 function defaults(w,d,ex,i){
   const cur=getLog(w,d,ex.n);
   if(cur[i]) return Object.assign({},cur[i]);
+  const lp=lastLog(w,d,ex.n);
+  const prev = lp && lp.sets[Math.min(i,lp.sets.length-1)];   // 前回の同じセット番号
+  const h=progHint(w,d,ex);
+
+  if(ex.iso){
+    // 単関節：1set目は提案重量、2set目以降は直前セットを引き継ぐ（落とすのは自由）
+    //         回数は常に「前回の同じセット」を出し、それを超えにいく
+    let kg=null;
+    if(i===0) kg = h ? h.kg : (prev ? prev.kg : null);
+    else {
+      for(let j=i-1;j>=0;j--) if(cur[j]) { kg=cur[j].kg; break; }
+      if(kg==null) kg = prev ? prev.kg : (h ? h.kg : null);
+    }
+    const reps = (h && h.type==='up') ? ex.r : (prev ? prev.reps : ex.r);
+    return {kg, reps, rpe:ex.rpe};
+  }
+
   // 同一セッション内の直前セットを引き継ぐ
   for(let j=i-1;j>=0;j--) if(cur[j]) return {kg:cur[j].kg, reps:cur[j].reps||ex.r, rpe:ex.rpe||cur[j].rpe};
   const rec=recKg(w,ex);
   if(rec!==null) return {kg:rec, reps:ex.r, rpe:ex.rpe};
-  const h=progHint(w,d,ex);                       // 前回実績からの提案をそのまま初期値にする
-  if(h){
-    if(ex.iso && h.type==='reps'){
-      // 単関節は毎セット限界まで行くので、前回の同じセットの回数を「超える目標」として出す
-      const lp0=lastLog(w,d,ex.n);
-      const b0=lp0 && lp0.sets[Math.min(i,lp0.sets.length-1)];
-      return {kg:h.kg, reps:(b0&&b0.reps)||ex.r, rpe:ex.rpe};
-    }
-    return {kg:h.kg, reps:h.reps, rpe:ex.rpe};
-  }
-  const lp=lastLog(w,d,ex.n);
-  if(lp){ const b=lp.sets[Math.min(i,lp.sets.length-1)]; return {kg:b.kg, reps:b.reps||ex.r, rpe:ex.rpe}; }
+  if(h) return {kg:h.kg, reps:h.reps, rpe:ex.rpe};
+  if(prev) return {kg:prev.kg, reps:prev.reps||ex.r, rpe:ex.rpe};
   return {kg:ex.nw?0:null, reps:ex.r||null, rpe:ex.rpe};
 }
 /* ダブルプログレッション
@@ -435,16 +442,17 @@ function progHint(w,d,ex){
   const base = lp.sets[lp.sets.length-1].kg;
 
   if(ex.iso){
-    // 単関節：毎セット限界まで行く前提なのでレップは自然に落ちる。
-    // セットを揃えさせず、合計レップで判定する
-    const tot = lp.sets.reduce((a,s)=>a+s.reps,0);
-    const target = lp.sets.length * ex.rx;
-    if(tot >= target){
-      let kg = stepUp(ex, base);
-      if(tot >= target*1.5) kg = stepUp(ex, kg);   // 明らかに軽すぎた場合は2段階
-      return {type:'up', kg, reps: ex.r, tot, target};
+    // 単関節：毎セット限界まで行く前提。2set目以降は重量を落としてよい。
+    // ・重量アップの判定は疲労ゼロの1set目だけで行う
+    // ・セッションの目標は総負荷（重量を変えても公平に比較できる唯一の数字）
+    const s1 = lp.sets[0];
+    const vol = Math.round(lp.sets.reduce((a,s)=>a+s.kg*s.reps,0));
+    if(s1.reps >= ex.rx){
+      const n = s1.reps>=ex.rx*2 ? 3 : (s1.reps>=ex.rx*1.5 ? 2 : 1); // 軽すぎた分だけまとめて上げる
+      let kg = s1.kg; for(let k=0;k<n;k++) kg = stepUp(ex, kg);
+      return {type:'up', kg, reps: ex.r, vol, n};
     }
-    return {type:'reps', kg: base, reps: ex.r, tot, target, nextKg: stepUp(ex, base)};
+    return {type:'reps', kg: s1.kg, reps: ex.r, vol, nextKg: stepUp(ex, s1.kg)};
   }
 
   // 多関節：全セットがレンジ上限 かつ 指定RPE以内 → 1段階上げる
@@ -542,10 +550,10 @@ function render(){
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
             hint.type==='up'
               ? (ex.iso
-                  ? `前回 合計${hint.tot}回 ≧ ${hint.target}回 → <b>${fmt(hint.kg)}kg</b> へ上げる`
+                  ? `1set目が${ex.rx}回に到達 → <b>${fmt(hint.kg)}kg</b> へ上げる（前回の総負荷 ${hint.vol}kg）`
                   : `前回 全セット${ex.rx}回達成 → <b>${fmt(hint.kg)}kg × ${ex.r}回</b> へ上げる`)
               : (ex.iso
-                  ? `<b>${fmt(hint.kg)}kg のまま毎セット限界まで</b>（前回 合計${hint.tot}回 / ${hint.target}回で ${fmt(hint.nextKg)}kg へ）`
+                  ? `1set目 <b>${fmt(hint.kg)}kg</b> で限界まで。2set目以降は落としてOK（前回の総負荷 <b>${hint.vol}kg</b> 超えが目標／1set目${ex.rx}回で ${fmt(hint.nextKg)}kg へ）`
                   : `<b>${fmt(hint.kg)}kg × ${hint.reps}回 を全セット</b>（1set目で出し切らない。${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`)
           }</button></div>`:''}
         ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
