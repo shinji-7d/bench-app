@@ -66,6 +66,7 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
 .tag{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
 .tag.rec{color:var(--ac);font-weight:700;font-size:13.5px}
 .tag.rpe{background:var(--dim);padding:1px 7px;border-radius:5px;font-size:11.5px}
+.tag.rpe.isotag{color:var(--warn);background:#241d10;border:1px solid #4a3a1a;font-size:11px}
 .prev{margin:6px 0 0 21px;font-size:11px;color:var(--tx3);line-height:1.5;
   font-variant-numeric:tabular-nums}
 .prev b{color:var(--tx2);font-weight:600}
@@ -430,8 +431,10 @@ function progHint(w,d,ex){
   if(lp.sets.every(s=>s.reps>=ex.rx && rpeOK(s)))
     return {type:'up', kg: stepUp(ex, base), reps: ex.r};
   // まだ揃っていない → 重量そのままでレップを伸ばす
-  const top = Math.max(...lp.sets.map(s=>s.reps));
-  return {type:'reps', kg: base, reps: Math.min(ex.rx, top+1), nextKg: stepUp(ex, base)};
+  // 基準は「一番少なかったセット」。最も余裕のある1set目に引っ張られると
+  // 2set目以降に届かない目標になるため、全セットで出せる数字を出す
+  const low = Math.min(...lp.sets.map(s=>s.reps));
+  return {type:'reps', kg: base, reps: Math.min(ex.rx, low+1), nextKg: stepUp(ex, base)};
 }
 
 /* ============================================================
@@ -510,7 +513,8 @@ function render(){
         </div>
         <div class="cmeta">
           <span class="tag">${ex.s} × ${ex.nw?(ex.r?ex.r:'限界'):(ex.rx?`${ex.r}〜${ex.rx}`:ex.r)}</span>
-          ${ex.rpe?`<span class="tag rpe">@${ex.rpe}</span>`:''}
+          ${ex.iso?`<span class="tag rpe isotag">フォーム崩れまで</span>`
+                  :(ex.rpe?`<span class="tag rpe">@${ex.rpe}</span>`:'')}
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
           ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
         </div>
@@ -520,7 +524,7 @@ function render(){
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
             hint.type==='up'
               ? `前回 全セット${ex.rx}回達成 → <b>${fmt(hint.kg)}kg × ${ex.r}回</b> へ上げる`
-              : `<b>${fmt(hint.kg)}kg × ${hint.reps}回</b> を狙う（${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`
+              : `<b>${fmt(hint.kg)}kg × ${hint.reps}回 を全セット</b>（1set目で出し切らない。${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`
           }</button></div>`:''}
         ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
       </div>
@@ -549,7 +553,7 @@ function render(){
             ? 'RPE — 記録用の目安。フォームが崩れたら終了＝@9。進行の判定には使いません'
             : `RPE — ${dft.rpe&&RPED[dft.rpe]?esc(RPED[dft.rpe]):'ラックに戻した直後の直感で'}`}</div>
           <div class="rpebar">${RPES.map(r=>
-            `<button class="rchip ${dft.rpe===r?'on':''} ${ex.rpe===r?'tgt':''}" data-rpe="${r}" data-ex="${ei}">${r}</button>`).join('')}</div>
+            `<button class="rchip ${dft.rpe===r?'on':''} ${(!ex.iso&&ex.rpe===r)?'tgt':''}" data-rpe="${r}" data-ex="${ei}">${r}</button>`).join('')}</div>
           <button class="logbtn ${s?'edit':''}" data-log="${ei}">${s?'上書きして保存':'記録する'}</button>
         </div>`;
       } else if(s){
