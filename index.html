@@ -243,14 +243,14 @@ const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92
              8:[6,86],9:[7.5,90],10:[8,92],11:[8.5,94],12:[6,86],13:[10,100]};
 
 const DAYS = [
-  {id:'d4', lb:'月 朝ジム', sub:'月｜朝30分ジム　背中・肩側部・二頭（引く日）　※押す筋肉は使わない（水のベンチを守る）'},
-  {id:'d1', lb:'水 ベンチH', sub:'水｜ジム60分　ベンチHeavy＋背中＋三頭　★TSを測る日。火に飲んだ翌日は無理に測らず空欄でOK'},
-  {id:'d2', lb:'木 朝ジム', sub:'木｜朝30分ジム　胸・肩後部・三頭（押す日）'},
-  {id:'d3', lb:'土 ベンチV', sub:'土｜ジム60分　ベンチVolume＋ナロー＋背中＋脚　※TSを測らないので前夜に多少飲んでも影響が小さい日'},
-  {id:'mA', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※月の夜だけは部位がかぶるのでNG'},
-  {id:'mD', lb:'家② 15分',  sub:'2回目｜土の夜が目安　内容は家①と同じ。全部やらなくてよい（週の合計で足りればOK）'},
-  {id:'mC', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　土に行けない週の代替（ポーズベンチ＋ナロー）'},
-  {id:'mB', lb:'＋朝 脚',   sub:'任意｜朝30分ジム　脚＋コア（余力のある週だけ）'}
+  {id:'d4', env:'gym', lb:'月 朝ジム', sub:'月｜朝30分ジム　背中・肩側部・二頭（引く日）　※押す筋肉は使わない（水のベンチを守る）'},
+  {id:'d1', env:'gym', lb:'水 ベンチH', sub:'水｜ジム60分　ベンチHeavy＋背中＋三頭　★TSを測る日。火に飲んだ翌日は無理に測らず空欄でOK'},
+  {id:'d2', env:'gym', lb:'木 朝ジム', sub:'木｜朝30分ジム　胸・肩後部・三頭（押す日）'},
+  {id:'d3', env:'gym', lb:'土 ベンチV', sub:'土｜ジム60分　ベンチVolume＋ナロー＋背中＋脚　※TSを測らないので前夜に多少飲んでも影響が小さい日'},
+  {id:'mA', env:'home', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※月の夜だけは部位がかぶるのでNG'},
+  {id:'mD', env:'home', lb:'家② 15分',  sub:'2回目｜土の夜が目安　内容は家①と同じ。全部やらなくてよい（週の合計で足りればOK）'},
+  {id:'mC', env:'gym', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　土に行けない週の代替（ポーズベンチ＋ナロー）'},
+  {id:'mB', env:'gym', lb:'＋朝 脚',   sub:'任意｜朝30分ジム　脚＋コア（余力のある週だけ）'}
 ];
 
 const S = (b,a,min)=>Math.max(min===undefined?2:min, b+a);
@@ -296,8 +296,8 @@ function buildDay(w, day){
   if(day==='d4'){
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:75,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'サイドレイズ（ジム）',s:S(4,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
-      note:'肩幅を作る最重要種目。自宅のサイドレイズとは重量が別管理になります'});
+    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
+      note:'肩幅を作る最重要種目。重量は自宅ぶんと自動で分けて管理されます'});
     push({n:'インクラインDBカール',s:S(3,a),r:12,rx:15,unit:1,iso:1,rpe:R(8,dl),rest:45,
       note:'ベンチ45〜60度に背中を預ける。立たないので腰に一切来ない。肘を体より後ろに置いて長頭を伸ばす',
       imp:'ここまで全部「引く」動作。水のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
@@ -313,6 +313,8 @@ function buildDay(w, day){
       note:'5.5kgから。肩がすくんだら終了。肩幅はここで作る'});
     push({n:'ハンマーカール',s:3,r:12,rx:15,steps:HOME,iso:1,rpe:R(8,dl),rest:60,
       note:'二頭＋前腕（腕橈骨筋）を同時に。腕が太く見えるのはここ'});
+    push({n:'インクラインDBカール',s:3,r:12,rx:15,steps:HOME,iso:1,opt:true,rpe:R(8,dl),rest:60,
+      note:'自宅でやる日はハンマーカールの代わりにこちら。両方やる必要はない'});
     push({n:'リストカール',s:2,r:15,rx:20,steps:HOME,iso:1,rpe:R(8,dl),rest:45,
       note:'前腕。9〜11.5kgから。40回出るのは軽すぎ。肘が動いたら終了'});
   }
@@ -389,18 +391,21 @@ function recKg(w,ex){
   return roundTo(raw, ex.unit||RND);
 }
 /* 直近の同種目の記録を探す（今の週より前、同じ種目名） */
+function envOf(id){ const x=DAYS.find(y=>y.id===id); return (x&&x.env)||'gym'; }
+/* 前回記録は「同じ環境」からしか引かない。
+   自宅の可変ダンベル(2.5/3.5/4.5/…)とジムのダンベル(1kg刻み)は
+   刻みも実在重量も違うので、混ざると存在しない重量が初期値に出てしまう。 */
 function lastLog(w,d,name){
-  for(let ww=w; ww>=1; ww--){
-    const order = ww===w ? DAYS.map(x=>x.id).filter(x=>x!==d) : DAYS.map(x=>x.id);
-    // 同じ週は他のdayも見るが、まずは過去週を優先したいので同週は最後に
-    if(ww===w) continue;
-    for(const dd of order){
+  const env = envOf(d);
+  const days = DAYS.map(x=>x.id).filter(x=>envOf(x)===env);
+  for(let ww=w-1; ww>=1; ww--){
+    for(const dd of days){
       const l=st.logs[lk(ww,dd,name)];
       if(l&&l.length) return {w:ww,d:dd,sets:l};
     }
   }
-  // 同週の別dayも最後に見る
-  for(const dd of DAYS.map(x=>x.id)){
+  // 同週の別day（同じ環境内）も最後に見る
+  for(const dd of days){
     if(dd===d) continue;
     const l=st.logs[lk(w,dd,name)];
     if(l&&l.length) return {w:w,d:dd,sets:l};
