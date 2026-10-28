@@ -398,19 +398,26 @@ function envOf(id){ const x=DAYS.find(y=>y.id===id); return (x&&x.env)||'gym'; }
 function lastLog(w,d,name){
   const env = envOf(d);
   const days = DAYS.map(x=>x.id).filter(x=>envOf(x)===env);
-  for(let ww=w-1; ww>=1; ww--){
+  const idx = {}; days.forEach((x,i)=>idx[x]=i);
+  const cands=[];
+  for(let ww=w; ww>=1; ww--){
     for(const dd of days){
+      if(ww===w && dd===d) continue;
       const l=st.logs[lk(ww,dd,name)];
-      if(l&&l.length) return {w:ww,d:dd,sets:l};
+      if(l && l.filter(Boolean).length)
+        cands.push({w:ww, d:dd, sets:l, t:st.date[`W${ww}|${dd}`]||''});
     }
   }
-  // 同週の別day（同じ環境内）も最後に見る
-  for(const dd of days){
-    if(dd===d) continue;
-    const l=st.logs[lk(w,dd,name)];
-    if(l&&l.length) return {w:w,d:dd,sets:l};
-  }
-  return null;
+  if(!cands.length) return null;
+  // 実施日の新しい順。週に2回ある種目は、同じ週の直近の回を参照する。
+  // 日付が無い記録は、週→DAYSの並び（＝週内の後ろほど新しい）で代替する。
+  cands.sort((a,b)=>{
+    if(a.t && b.t && a.t!==b.t) return a.t<b.t ? 1 : -1;
+    if(!!a.t !== !!b.t) return a.t ? -1 : 1;   // 日付のある記録を優先
+    if(a.w!==b.w) return b.w-a.w;
+    return idx[b.d]-idx[a.d];
+  });
+  return cands[0];
 }
 function dayLabel(id){ const x=DAYS.find(y=>y.id===id); return x?x.lb:id; }
 
