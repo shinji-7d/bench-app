@@ -221,6 +221,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
 const RND = 2.5;
 /* 自宅の可変ダンベル（実在する重量のみ） */
 const HOME=[2.5,3.5,4.5,5.5,6.5,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
+/* ジムのダンベル（1kg刻み・整数のみ） */
+const GYMDB=Array.from({length:40},(_,i)=>i+1);
 
 // week: main[sets,reps,%,rpe] / narrow / pause / acc(補助セット増減) / dl(デロード)
 const WK = {
@@ -274,9 +276,9 @@ function buildDay(w, day){
     push({n:'フェイスプル（任意）',s:S(3,a),r:15,rx:20,unit:5,iso:1,rpe:R(7,dl),rest:45,opt:true});
   }
   if(day==='d2'){
-    push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,unit:1,rpe:R(8,dl),rest:75,
+    push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,steps:GYMDB,rpe:R(8,dl),rest:75,
       note:'胸板の厚み担当。下ろしすぎない（最大で顎の高さまで）'});
-    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
+    push({n:'リアレイズ',s:S(3,a),r:15,rx:20,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
       note:'肩の後ろ側。巻き肩対策＝ベンチの安全装置'});
     push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(8,dl),rest:45,
       note:'@8で止める。限界までやらない'});
@@ -296,9 +298,9 @@ function buildDay(w, day){
   if(day==='d4'){
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:75,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,unit:1,iso:1,rpe:R(8,dl),rest:45,
+    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
       note:'肩幅を作る最重要種目。重量は自宅ぶんと自動で分けて管理されます'});
-    push({n:'インクラインDBカール',s:S(3,a),r:12,rx:15,unit:1,iso:1,rpe:R(8,dl),rest:45,
+    push({n:'インクラインDBカール',s:S(3,a),r:12,rx:15,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
       note:'ベンチ45〜60度に背中を預ける。立たないので腰に一切来ない。肘を体より後ろに置いて長頭を伸ばす',
       imp:'ここまで全部「引く」動作。水のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
   }
@@ -336,7 +338,7 @@ function testDay(day){
     push({n:'試技④（任意・＋2.5kg）',s:1,r:1,rpe:10,rest:480,opt:true,note:'フォームが崩れていない時だけ'});
     push({n:'ダウン：ラットプルダウン',s:2,r:12,rpe:6,rest:60});
   } else {
-    push({n:'インクラインDBプレス（軽め）',s:2,r:12,rpe:6,rest:90,unit:1,note:'回復優先。追い込まない'});
+    push({n:'インクラインDBプレス（軽め）',s:2,r:12,rpe:6,rest:90,steps:GYMDB,note:'回復優先。追い込まない'});
     push({n:'ワンハンドDBロー（軽め）',s:2,r:12,rpe:6,rest:60,unit:1});
     push({n:'デッドバグ',s:3,r:8,rpe:6,rest:45,nw:true,note:'8回/側'});
   }
@@ -372,11 +374,11 @@ function e1rm(w){ const r=e1rmAt(w); return r? r.v : null; }
 function roundTo(x,u){ return Math.round(x/u)*u; }
 /* 自宅の可変ダンベルは等間隔でないので、実在する重量だけを行き来させる */
 function stepUp(ex,v){
-  if(ex.steps){ const n=ex.steps.find(x=>x>v+1e-9); return n===undefined? ex.steps[ex.steps.length-1] : n; }
+  if(ex.steps){ v=snap(ex,v); const n=ex.steps.find(x=>x>v+1e-9); return n===undefined? ex.steps[ex.steps.length-1] : n; }
   return v+(ex.unit||RND);
 }
 function stepDown(ex,v){
-  if(ex.steps){ const a=ex.steps.filter(x=>x<v-1e-9); return a.length? a[a.length-1] : ex.steps[0]; }
+  if(ex.steps){ v=snap(ex,v); const a=ex.steps.filter(x=>x<v-1e-9); return a.length? a[a.length-1] : ex.steps[0]; }
   return Math.max(0, v-(ex.unit||RND));
 }
 function snap(ex,v){
@@ -426,7 +428,9 @@ function defaults(w,d,ex,i){
   const cur=getLog(w,d,ex.n);
   if(cur[i]) return Object.assign({},cur[i]);
   const lp=lastLog(w,d,ex.n);
-  const prev = lp && lp.sets[Math.min(i,lp.sets.length-1)];   // 前回の同じセット番号
+  let prev = lp && lp.sets[Math.min(i,lp.sets.length-1)];     // 前回の同じセット番号
+  // 機材に存在しない重量が履歴に残っている場合は、実在重量に寄せて出す
+  if(prev && prev.kg) prev = Object.assign({}, prev, {kg: snap(ex, prev.kg)});
   const h=progHint(w,d,ex);
 
   if(ex.iso){
@@ -459,7 +463,7 @@ function progHint(w,d,ex){
   if(lp.sets.length < ex.s) return null;
   if(!lp.sets.every(s=>s && s.kg>0)) return null;
   // 基準は常に「最終セットで扱えた重量」＝疲労した状態でも維持できた重量
-  const base = lp.sets[lp.sets.length-1].kg;
+  const base = snap(ex, lp.sets[lp.sets.length-1].kg);   // 古い記録の端数を実在重量に寄せる
 
   if(ex.iso){
     // 単関節：毎セット限界まで行く前提。2set目以降は重量を落としてよい。
@@ -469,10 +473,10 @@ function progHint(w,d,ex){
     const vol = Math.round(lp.sets.reduce((a,s)=>a+s.kg*s.reps,0));
     if(s1.reps >= ex.rx){
       const n = s1.reps>=ex.rx*2 ? 3 : (s1.reps>=ex.rx*1.5 ? 2 : 1); // 軽すぎた分だけまとめて上げる
-      let kg = s1.kg; for(let k=0;k<n;k++) kg = stepUp(ex, kg);
+      let kg = snap(ex, s1.kg); for(let k=0;k<n;k++) kg = stepUp(ex, kg);
       return {type:'up', kg, reps: ex.r, vol, n};
     }
-    return {type:'reps', kg: s1.kg, reps: ex.r, vol, nextKg: stepUp(ex, s1.kg)};
+    return {type:'reps', kg: snap(ex, s1.kg), reps: ex.r, vol, nextKg: stepUp(ex, s1.kg)};
   }
 
   // 多関節：全セットがレンジ上限 かつ 指定RPE以内 → 1段階上げる
