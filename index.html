@@ -79,6 +79,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
 .vol b{color:var(--tx2);font-weight:700}
 .vol .go{color:var(--ac)}
 .vol.hit b,.vol.hit .go{color:var(--ok)}
+.vol.up .go{color:var(--tx3)}
+.vol.up b{color:var(--warn)}
 .vbar{height:4px;background:var(--dim);border-radius:2px;overflow:hidden;margin:3px 0 4px;max-width:260px}
 .vbar i{display:block;height:100%;background:var(--ac);transition:width .3s}
 .vol.hit .vbar i{background:var(--ok)}
@@ -221,8 +223,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
 const RND = 2.5;
 /* 自宅の可変ダンベル（実在する重量のみ） */
 const HOME=[2.5,3.5,4.5,5.5,6.5,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
-/* ジムのダンベル（1kg刻み・整数のみ） */
-const GYMDB=Array.from({length:40},(_,i)=>i+1);
+/* ジムのダンベル（10kgまで1kg刻み、10kg超は2kg刻み） */
+const GYMDB=[1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40];
 
 // week: main[sets,reps,%,rpe] / narrow / pause / acc(補助セット増減) / dl(デロード)
 const WK = {
@@ -494,11 +496,21 @@ const $=(id)=>document.getElementById(id);
 const esc=(s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* 単関節種目の総負荷（kg×回の合計）を、セットを入力するたびに積み上げて表示する */
 function volOf(sets){ return Math.round((sets||[]).filter(Boolean).reduce((a,s)=>a+(+s.kg||0)*(+s.reps||0),0)); }
-function volBar(ex, log, lp){
+function volBar(ex, log, lp, hint){
   if(!ex.iso) return '';
   const cur  = volOf(log);
   const prev = lp ? volOf(lp.sets) : 0;
   if(!prev && !cur) return '';
+  // 重量を上げた週は回数が落ちて総負荷も下がるのが正常。前回超えを目標にしない
+  const done   = (log||[]).filter(Boolean);
+  const curKg  = done.length ? done[0].kg : (hint ? hint.kg : null);
+  const prevKg = lp && lp.sets[0] ? lp.sets[0].kg : null;
+  if(prev>0 && curKg!=null && prevKg!=null && curKg > prevKg){
+    return `<div class="vol up">
+      総負荷 今日 <b>${cur}kg</b>（前回 ${prev}kg ／ ${fmt(prevKg)}kg のとき）<br>
+      <span class="go">重量を上げた週。総負荷が下がって正常です。1set目で ${ex.r}回 を出せればOK</span>
+    </div>`;
+  }
   const hit = prev>0 && cur>=prev;
   const pct = prev>0 ? Math.min(100, cur/prev*100) : (cur>0?100:0);
   const tail = prev>0
@@ -598,7 +610,7 @@ function render(){
                   ? `1set目 <b>${fmt(hint.kg)}kg</b> で限界まで。2set目以降は落としてOK（前回の総負荷 <b>${hint.vol}kg</b> 超えが目標／1set目${ex.rx}回で ${fmt(hint.nextKg)}kg へ）`
                   : `<b>${fmt(hint.kg)}kg × ${hint.reps}回 を全セット</b>（1set目で出し切らない。${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`)
           }</button></div>`:''}
-        ${volBar(ex, log, lp)}
+        ${volBar(ex, log, lp, hint)}
         ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
       </div>
       <div class="sets">`;
