@@ -228,30 +228,30 @@ const GYMDB=[1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40];
 
 // week: main[sets,reps,%,rpe] / narrow / pause / acc(補助セット増減) / dl(デロード)
 const WK = {
- 1:{lb:'再導入',   main:[4,6,70,6.0],  narrow:[3,8,58,7.0], pause:[6,3,67,6.5], acc:0,  dl:0},
- 2:{lb:'蓄積',     main:[4,6,73,6.5],  narrow:[3,8,60,7.0], pause:[6,3,69,6.5], acc:0,  dl:0},
- 3:{lb:'蓄積',     main:[4,6,76,7.0],  narrow:[3,8,62,7.5], pause:[6,3,71,7.0], acc:0,  dl:0},
- 4:{lb:'デロード', main:[3,5,70,5.5],  narrow:[2,8,56,6.0], pause:[4,3,65,6.0], acc:-1, dl:1},
- 5:{lb:'筋肥大',   main:[4,5,77,7.0],  narrow:[3,6,65,7.0], pause:[5,3,72,6.5], acc:0,  dl:0},
- 6:{lb:'筋肥大',   main:[4,5,79,7.5],  narrow:[3,6,67,7.5], pause:[5,3,74,7.0], acc:0,  dl:0},
- 7:{lb:'筋肥大+',  main:[5,5,81,8.0],  narrow:[3,6,69,8.0], pause:[5,3,76,7.0], acc:1,  dl:0},
- 8:{lb:'デロード', main:[3,4,74,6.0],  narrow:[2,6,62,6.0], pause:[4,3,68,6.0], acc:-1, dl:1},
- 9:{lb:'筋力',     main:[4,3,84,7.0],  narrow:[3,5,70,7.5], pause:[6,2,78,7.0], acc:0,  dl:0},
-10:{lb:'筋力',     main:[5,3,86,8.0],  narrow:[3,5,72,8.0], pause:[6,2,80,7.0], acc:0,  dl:0},
-11:{lb:'筋力+',    main:[4,3,87,8.5],  narrow:[3,5,74,8.0], pause:[5,2,82,7.5], acc:-1, dl:0},
-12:{lb:'デロード', main:[3,3,78,5.5],  narrow:[2,5,65,6.0], pause:[3,2,72,6.0], acc:-2, dl:1},
-13:{lb:'テスト',   main:null, narrow:null, pause:null, acc:-1, dl:0}
+ 1:{lb:'再導入',   speed:[6,3,65,6], main:[4,6,70,6.0],  narrow:[3,8,58,7.0], pause:[6,3,67,6.5], acc:0,  dl:0},
+ 2:{lb:'蓄積',     speed:[6,3,67,6], main:[4,6,73,6.5],  narrow:[3,8,60,7.0], pause:[6,3,69,6.5], acc:0,  dl:0},
+ 3:{lb:'蓄積',     speed:[6,3,69,6], main:[4,6,76,7.0],  narrow:[3,8,62,7.5], pause:[6,3,71,7.0], acc:0,  dl:0},
+ 4:{lb:'デロード', speed:[4,3,65,5.5], main:[3,5,70,5.5],  narrow:[2,8,56,6.0], pause:[4,3,65,6.0], acc:-1, dl:1},
+ 5:{lb:'筋肥大',   speed:[6,3,70,6], main:[4,5,77,7.0],  narrow:[3,6,65,7.0], pause:[5,3,72,6.5], acc:0,  dl:0},
+ 6:{lb:'筋肥大',   speed:[6,3,72,6], main:[4,5,79,7.5],  narrow:[3,6,67,7.5], pause:[5,3,74,7.0], acc:0,  dl:0},
+ 7:{lb:'筋肥大+',  speed:[6,3,74,6.5], main:[5,5,81,8.0],  narrow:[3,6,69,8.0], pause:[5,3,76,7.0], acc:1,  dl:0},
+ 8:{lb:'デロード', speed:[4,3,68,5.5], main:[3,4,74,6.0],  narrow:[2,6,62,6.0], pause:[4,3,68,6.0], acc:-1, dl:1},
+ 9:{lb:'筋力',     speed:[6,2,76,6.5], main:[4,3,84,7.0],  narrow:[3,5,70,7.5], pause:[6,2,78,7.0], acc:0,  dl:0},
+10:{lb:'筋力',     speed:[6,2,78,6.5], main:[5,3,86,8.0],  narrow:[3,5,72,8.0], pause:[6,2,80,7.0], acc:0,  dl:0},
+11:{lb:'筋力+',    speed:[5,2,78,7], main:[4,3,87,8.5],  narrow:[3,5,74,8.0], pause:[5,2,82,7.5], acc:-1, dl:0},
+12:{lb:'デロード', speed:[3,2,72,5.5], main:[3,3,78,5.5],  narrow:[2,5,65,6.0], pause:[3,2,72,6.0], acc:-2, dl:1},
+13:{lb:'テスト',   speed:null, main:null, narrow:null, pause:null, acc:-1, dl:0}
 };
 // week -> [目標RPE, %1RM]（RPE換算表の1rep値に一致させてある）
 const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92],
              8:[6,86],9:[7.5,90],10:[8,92],11:[8.5,94],12:[6,86],13:[10,100]};
 
 const DAYS = [
-  {id:'d4', env:'gym', lb:'月 朝ジム', sub:'月｜朝30分ジム　背中・肩側部・二頭（引く日）　※押す筋肉は使わない（水のベンチを守る）'},
+  {id:'d4', env:'gym', lb:'月 朝ジム', sub:'月｜朝30分ジム　ベンチ（スピード）＋背中　※軽く速く。追い込まない'},
   {id:'d1', env:'gym', lb:'水 ベンチH', sub:'水｜ジム60分　ベンチHeavy＋背中＋三頭　★TSを測る日。火に飲んだ翌日は無理に測らず空欄でOK'},
-  {id:'d2', env:'gym', lb:'木 朝ジム', sub:'木｜朝30分ジム　胸・肩後部・三頭（押す日）'},
+  {id:'d2', env:'gym', lb:'木 朝ジム', sub:'木｜朝30分ジム　胸・肩・腕'},
   {id:'d3', env:'gym', lb:'土 ベンチV', sub:'土｜ジム60分　ベンチVolume＋ナロー＋背中＋脚　※TSを測らないので前夜に多少飲んでも影響が小さい日'},
-  {id:'mA', env:'home', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※月の夜だけは部位がかぶるのでNG'},
+  {id:'mA', env:'home', lb:'家① 15分',  sub:'1回目｜水の夜が目安　肩側部・二頭・前腕　※木の夜だけは部位がかぶるのでNG'},
   {id:'mD', env:'home', lb:'家② 15分',  sub:'2回目｜土の夜が目安　内容は家①と同じ。全部やらなくてよい（週の合計で足りればOK）'},
   {id:'mC', env:'gym', lb:'＋朝ベンチ', sub:'任意｜朝30分ジム　土に行けない週の代替（ポーズベンチ＋ナロー）'},
   {id:'mB', env:'gym', lb:'＋朝 脚',   sub:'任意｜朝30分ジム　脚＋コア（余力のある週だけ）'}
@@ -280,10 +280,12 @@ function buildDay(w, day){
   if(day==='d2'){
     push({n:'インクラインDBプレス',s:S(3,a),r:10,rx:12,steps:GYMDB,rpe:R(8,dl),rest:75,
       note:'胸板の厚み担当。下ろしすぎない（最大で顎の高さまで）'});
+    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
+      note:'肩幅を作る最重要種目。重量は自宅ぶんと自動で分けて管理されます'});
     push({n:'リアレイズ',s:S(3,a),r:15,rx:20,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
       note:'肩の後ろ側。巻き肩対策＝ベンチの安全装置'});
-    push({n:'トライセプス・プッシュダウン',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(8,dl),rest:45,
-      note:'@8で止める。限界までやらない'});
+    push({n:'インクラインDBカール',s:S(3,a),r:12,rx:15,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
+      note:'ベンチ45〜60度に背中を預ける。立たないので腰に一切来ない'});
   }
   if(day==='d3'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
@@ -298,13 +300,11 @@ function buildDay(w, day){
       note:'ハム強化＝腰の保険'});
   }
   if(day==='d4'){
+    push({n:'ベンチプレス｜スピード',s:p.speed[0],r:p.speed[1],pct:p.speed[2],rpe:p.speed[3],rest:90,
+      imp:'追い込む日ではなく技術練習の日。1回ずつ全力で加速させ、バーが止まりそうになったらそこで終了',
+      note:'ウォームアップ：バー×10 → 40×5 → 50×3。水のベンチHeavyに疲労を残さないこと'});
     push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:75,
       note:'胸パッドに預ける。肩甲骨を開いてから肘を腰下へ'});
-    push({n:'サイドレイズ',s:S(4,a),r:15,rx:20,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
-      note:'肩幅を作る最重要種目。重量は自宅ぶんと自動で分けて管理されます'});
-    push({n:'インクラインDBカール',s:S(3,a),r:12,rx:15,steps:GYMDB,iso:1,rpe:R(8,dl),rest:45,
-      note:'ベンチ45〜60度に背中を預ける。立たないので腰に一切来ない。肘を体より後ろに置いて長頭を伸ばす',
-      imp:'ここまで全部「引く」動作。水のベンチHeavyをフレッシュで迎えるため、胸・三頭・肩前部は一切やらないこと'});
   }
   if(day==='mC'){
     push({n:'ポーズベンチプレス（胸で2秒）',s:p.pause[0],r:p.pause[1],pct:p.pause[2],rpe:p.pause[3],rest:150,
@@ -367,9 +367,24 @@ let edit={};     // 種目名 -> 編集中のセットindex
 let draft={};    // 種目名 -> {kg,reps,rpe}
 
 /* 計算 */
+/* 1レップを挙げたときのRPE → 1RMに対する% （元プログラムのRPE換算表の1rep列） */
+const TS1PCT = {10:100, 9.5:98, 9:96, 8.5:94, 8:92, 7.5:90, 7:89, 6.5:87, 6:86};
+/* その週のトップシングルを何%として扱うか。
+   計画RPEではなく“実際に記録したRPE”を使う。
+   計画@6のつもりが@9.5で挙がった週に、計画値で割るとe1RMが大幅に過大評価される。 */
+function tsPct(w){
+  const l = st.logs[lk(w,'d1','ベンチプレス｜トップシングル')];
+  const rec = l && l.filter(Boolean)[0];
+  if(rec && rec.rpe && TS1PCT[rec.rpe]) return TS1PCT[rec.rpe];
+  return TSP[w] ? TSP[w][1] : null;
+}
 /* 直近に測れたトップシングルからe1RMを出す。今週が未測定なら前の週へ遡る */
 function e1rmAt(w){
-  for(let i=w;i>=1;i--){ const t=st.ts[i], p=TSP[i]; if(t&&p) return {v:t/p[1]*100, from:i}; }
+  for(let i=w;i>=1;i--){
+    const t=st.ts[i]; if(!t) continue;
+    const pct=tsPct(i); if(!pct) continue;
+    return {v:t/pct*100, from:i, pct};
+  }
   return null;
 }
 function e1rm(w){ const r=e1rmAt(w); return r? r.v : null; }
@@ -554,7 +569,7 @@ function render(){
     const basis = (er && er.from<w) ? er.v : st.base;
     const guide = roundTo(basis*tpct/100, RND);
     const res = v!=null
-      ? `<div class="res">今週の e1RM　<b>${(v/tpct*100).toFixed(1)} kg</b>　（TS ${fmt(v)}kg ÷ ${tpct}%）</div>`
+      ? `<div class="res">今週の e1RM　<b>${(v/(tsPct(w)||tpct)*100).toFixed(1)} kg</b>　（TS ${fmt(v)}kg ÷ ${tsPct(w)||tpct}%）</div>`
       : (er
         ? `<div class="res">W${er.from}の e1RM <b>${er.v.toFixed(1)} kg</b> で暫定計算中。<br>今日ここで測れば今週の重量に上書きされます（飲んだ翌日などは<b>測らず空欄のままでOK</b>）</div>`
         : `<div class="res" style="color:var(--tx3)">未測定：基準 ${fmt(st.base)}kg からの暫定重量を表示中</div>`);
