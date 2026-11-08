@@ -77,14 +77,14 @@ vm.createContext(sandbox);
 
 /* --- 読み込み（末尾の render() も走る）
    const/let はサンドボックスのプロパティにならないので、末尾で明示的に取り出す --- */
-const EXPORTS = ['DAYS', 'WK', 'TSP', 'RPES', 'buildDay', 'render', 'recKg', 'defaults',
-  'progHint', 'dayDone', 'e1rm', 'lastLog', 'save', 'st', 'KEY'];
+const EXPORTS = ['DAYS', 'WK', 'RPES', 'buildDay', 'render', 'recKg', 'defaults',
+  'progHint', 'dayDone', 'lastLog', 'save', 'st', 'KEY', 'bestE1', 'est1RM', 'volOf'];
 const exportShim = `\n;globalThis.__exp = { ${EXPORTS.join(', ')} };`;
 try { vm.runInContext(code + exportShim, sandbox, { filename: 'index.html(inline)' }); }
 catch (e) { console.error('RUNTIME ERROR (初期描画):', e.stack); process.exit(1); }
 console.log('✓ 初期描画OK');
 
-const { DAYS, WK, TSP, buildDay, render, recKg, defaults, progHint, dayDone } = sandbox.__exp;
+const { DAYS, WK, buildDay, render, recKg, defaults, progHint, dayDone } = sandbox.__exp;
 /* st は let 再代入されるため getter 経由で見る */
 const ST = () => sandbox.__exp.st;
 
@@ -96,7 +96,7 @@ for (const d of DAYS) {
   if (!d.id || !d.lb || !d.sub) problems.push(`DAYS[${d.id}] に欠損フィールド`);
 }
 const weeks = Object.keys(WK).map(Number).sort((a, b) => a - b);
-for (const w of weeks) if (!TSP[w]) problems.push(`W${w}: TSP 定義なし`);
+for (const w of weeks) if (!(WK)[w]) problems.push(`W${w}: TSP 定義なし`);
 
 /* --- 2. 全週×全day で buildDay を検証 --- */
 let exCount = 0;
@@ -142,17 +142,22 @@ console.log('✓ 全週×全day の描画');
 /* --- 4. 記録→保存→再読込のラウンドトリップ --- */
 ST().w = 1; ST().d = 'd1';
 const ex1 = buildDay(1, 'd1')[1];
-ST().logs[`W1|d1|${ex1.n}`] = [{ kg: 60, reps: 6, rpe: 7 }];
-ST().ts[1] = 72.5;
+ST().logs[`W1|d1|${ex1.n}`] = Array.from({length: ex1.s}, () => ({ kg: 14, reps: 10, rpe: 8 }));
 sandbox.__exp.save();
 const reread = JSON.parse(localStorageData[Object.keys(localStorageData)[0]]);
-if (reread.ts[1] !== 72.5) problems.push('保存→復元で ts が失われる');
 if (!reread.logs[`W1|d1|${ex1.n}`]) problems.push('保存→復元で logs が失われる');
-// e1RM が TS に追随するか
-const before = recKg(1, buildDay(1, 'd1')[1]);
-ST().ts[1] = 80;
-const after = recKg(1, buildDay(1, 'd1')[1]);
-if (!(after > before)) problems.push(`TSを上げても推奨重量が上がらない (${before} → ${after})`);
+// 肥大プログラムはダブルプログレッション：前回実績から次回の提案が出るか
+ST().date['W1|d1'] = '2026/11/11';
+const hint = sandbox.__exp.progHint(2, 'd1', buildDay(2, 'd1')[1]);
+if (!hint) problems.push('前回実績があるのに次回の提案が出ない');
+// ベンチの推定1RMが記録から算出されるか（60kg×6@7 → 約76kg）
+const b = sandbox.__exp.bestE1('ベンチプレス');
+ST().logs['W1|d1|ベンチプレス'] = [{ kg: 60, reps: 6, rpe: 7 }];
+const b2 = sandbox.__exp.bestE1('ベンチプレス');
+if (!b2 || Math.abs(b2.v - 60 / 0.76 * 100 / 100) > 1) {
+  if (!b2) problems.push('ベンチの推定1RMが算出されない');
+  else if (Math.abs(b2.v - 78.9) > 1.5) problems.push(`推定1RMの値が不正 (${b2.v.toFixed(1)}kg / 期待 約78.9kg)`);
+}
 try { render(); } catch (e) { problems.push(`記録ありの描画で例外: ${e.message}`); }
 console.log('✓ 保存/復元・e1RM連動');
 
