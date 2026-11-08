@@ -282,7 +282,7 @@ function buildDay(w, day){
   if(day==='d1'){
     push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,unit:2.5,e1:1,rpe:R(8,dl),rest:150,
       note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'ここはフリーウェイトで。100kgを測る種目なのでスミスにしない。1set目が6回割れたら重量を下げる'});
+      imp:'週で一番重い日。1set目が6回割れたら重量を下げる'});
     push({n:'インクラインDBプレス',s:S(4,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
@@ -486,7 +486,11 @@ function lastLog(w,d,name){
         cands.push({w:ww, d:dd, sets:l, t:st.date[`W${ww}|${dd}`]||''});
     }
   }
-  if(!cands.length) return null;
+  if(!cands.length){
+    // 記録がまだ無い種目は、前プログラムから引き継いだ実績を「前回」として扱う
+    const e = st.seed && st.seed[seedKey(name, envOf(d))];
+    return (e && e.sets && e.sets.length) ? {w:e.label||'前', d:d, sets:e.sets, seed:true} : null;
+  }
   // 実施日の新しい順。週に2回ある種目は、同じ週の直近の回を参照する。
   // 日付が無い記録は、週→DAYSの並び（＝週内の後ろほど新しい）で代替する。
   cands.sort((a,b)=>{
@@ -514,14 +518,18 @@ function buildSeed(){
     const cur=best[key];
     const newer = !cur || (when&&cur.when&&when!==cur.when ? when>cur.when
                  : (!!when!==!!cur.when ? !!when : wn>cur.wn));
-    if(newer) best[key]={kg:sets[sets.length-1].kg, when, wn};
+    if(newer) best[key]={sets:sets.map(x=>({kg:+x.kg,reps:+x.reps||0,rpe:x.rpe||null})),
+                         label:`${wk}·${dayLabel(day)}`, when, wn};
   }
-  const out={}; for(const k of Object.keys(best)) out[k]=best[k].kg;
-  return out;
+  return best;
+}
+function seedSets(ex,d){
+  const e = st.seed && st.seed[seedKey(ex.n, envOf(d))];
+  return (e && e.sets && e.sets.length) ? e : null;
 }
 function seedOf(ex,d){
-  const v = st.seed && st.seed[seedKey(ex.n, envOf(d))];
-  return (+v>0) ? snap(ex, v) : null;
+  const e = seedSets(ex,d);
+  return e ? snap(ex, e.sets[e.sets.length-1].kg) : null;
 }
 /* 既定値（入力の手間をゼロに近づける） */
 function defaults(w,d,ex,i){
@@ -685,8 +693,7 @@ function render(){
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
           ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
         </div>
-        ${(!lp && seedOf(ex,d))?`<div class="prev"><b>開始重量 ${fmt(seedOf(ex,d))}kg</b>　<span style="opacity:.7">前プログラムの実績から引き継ぎ。ここから始めてください</span></div>`:''}
-        ${lp?`<div class="prev"><b>前回 W${lp.w}·${dayLabel(lp.d)}</b>　${
+        ${lp?`<div class="prev"><b>${lp.seed?`前回 ${lp.w}`:`前回 W${lp.w}·${dayLabel(lp.d)}`}</b>${lp.seed?'<span style="opacity:.7">（前プログラム）</span>':''}　${
             lp.sets.filter(Boolean).map(s=>`${fmt(s.kg)}×${s.reps}${s.rpe?`<span style="opacity:.6">@${s.rpe}</span>`:''}`).join(' / ')
           }</div>`:''}
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
