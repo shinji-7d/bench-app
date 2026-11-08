@@ -270,12 +270,12 @@ function buildDay(w, day){
       note:'ベンチ45〜60度に背中を預ける。腰に一切来ない'});
     push({n:'トライセプス・プッシュダウン',s:S(3,a),r:10,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:45,
       note:'肘を体側で固定。ここまでで約30分'});
-    push({n:'シーテッドDBショルダープレス（1時間の日）',s:4,r:8,rx:12,steps:GYMDB,opt:true,rpe:R(8,dl),rest:90,
+    push({n:'シーテッドDBショルダープレス',s:4,r:8,rx:12,steps:GYMDB,opt:true,rpe:R(8,dl),rest:90,
       note:'背もたれ85度。立位でやらない（腰が反る）'});
-    push({n:'オーバーヘッド・トライセプスEX（1時間の日）',s:3,r:12,rx:15,unit:5,iso:1,opt:true,rpe:R(9,dl),rest:60,
-      note:'ケーブルに背を向けて頭の後ろから。三頭の長頭に乗る'});
-    push({n:'ハンマーカール（1時間の日）',s:3,r:12,rx:15,steps:GYMDB,iso:1,opt:true,rpe:R(9,dl),rest:45,
-      note:'二頭＋前腕を同時に。腕が太く見えるのはここ'});
+    push({n:'オーバーヘッド・トライセプスEX',s:3,r:12,rx:15,unit:5,iso:1,opt:true,rpe:R(9,dl),rest:60,
+      note:'1時間取れる日だけ。ケーブルに背を向けて頭の後ろから。三頭の長頭に乗る'});
+    push({n:'ハンマーカール',s:3,r:12,rx:15,steps:GYMDB,iso:1,opt:true,rpe:R(9,dl),rest:45,
+      note:'1時間取れる日だけ。二頭＋前腕を同時に'});
   }
 
   /* 水：胸・肩前部・三頭 ＋ 四頭（90分） */
@@ -322,7 +322,7 @@ function buildDay(w, day){
       note:'ハム。腰の保険にもなるので飛ばさない'});
     push({n:'サイドレイズ',s:S(4,a),r:12,rx:20,steps:GYMDB,iso:1,rpe:R(9,dl),rest:60,
       note:'週2回目。軽くていいので必ずやる'});
-    push({n:'インクラインDBカール（任意）',s:3,r:8,rx:12,steps:GYMDB,iso:1,opt:true,rpe:R(9,dl),rest:45,
+    push({n:'インクラインDBカール',s:3,r:8,rx:12,steps:GYMDB,iso:1,opt:true,rpe:R(9,dl),rest:45,
       note:'時間が余った日だけ'});
   }
 
@@ -334,7 +334,7 @@ function buildDay(w, day){
       note:'二頭＋前腕（腕橈骨筋）を同時に。腕が太く見えるのはここ'});
     push({n:'リストカール',s:2,r:15,rx:20,steps:HOME,iso:1,rpe:R(9,dl),rest:45,
       note:'前腕。9〜11.5kgから。肘が動いたら終了'});
-    push({n:'インクラインDBカール（任意）',s:3,r:12,rx:15,steps:HOME,iso:1,opt:true,rpe:R(9,dl),rest:60,
+    push({n:'インクラインDBカール',s:3,r:12,rx:15,steps:HOME,iso:1,opt:true,rpe:R(9,dl),rest:60,
       note:'ハンマーカールの代わりでも可。両方やる必要はない'});
   }
 
@@ -410,7 +410,11 @@ const RPED={10:'限界。もう1回も挙がらない',9.5:'あと1回いける�
    状態
    ============================================================ */
 const KEY='bench13_v1';
-const DEF={base:65, ts:{}, logs:{}, memo:{}, date:{}, w:1, d:'d1'};
+const DEF={base:65, ts:{}, logs:{}, memo:{}, date:{}, seed:{}, w:1, d:'d1'};
+/* 旧プログラムで名前が違っていた種目の対応表（開始重量の引き継ぎ用） */
+const SEEDMAP={'ベンチプレス｜メインセット':'ベンチプレス','ベンチプレス｜スピード':'ベンチプレス',
+               'サイドレイズ（ジム）':'サイドレイズ','DBカール':'インクラインDBカール'};
+const seedKey=(name,env)=>`${env}|${name}`;
 let st;
 try{ st=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ st=Object.assign({},DEF); }
 const save=()=>localStorage.setItem(KEY,JSON.stringify(st));
@@ -495,6 +499,30 @@ function lastLog(w,d,name){
 }
 function dayLabel(id){ const x=DAYS.find(y=>y.id===id); return x?x.lb:id; }
 
+/* 記録を消す前に、各種目の直近の使用重量だけを抜き出して開始重量として残す。
+   種目名は旧プログラムの名前も新しい名前に寄せる。環境（自宅/ジム）ごとに別管理。 */
+function buildSeed(){
+  const best={};
+  for(const k of Object.keys(st.logs||{})){
+    const parts=k.split('|'); if(parts.length<3) continue;
+    const [wk,day]=parts, name=parts.slice(2).join('|');
+    const sets=(st.logs[k]||[]).filter(x=>x && +x.kg>0);
+    if(!sets.length) continue;
+    const key=seedKey(SEEDMAP[name]||name, envOf(day));
+    const when=st.date[`${wk}|${day}`]||'';
+    const wn=parseInt(String(wk).replace(/\D/g,''),10)||0;
+    const cur=best[key];
+    const newer = !cur || (when&&cur.when&&when!==cur.when ? when>cur.when
+                 : (!!when!==!!cur.when ? !!when : wn>cur.wn));
+    if(newer) best[key]={kg:sets[sets.length-1].kg, when, wn};
+  }
+  const out={}; for(const k of Object.keys(best)) out[k]=best[k].kg;
+  return out;
+}
+function seedOf(ex,d){
+  const v = st.seed && st.seed[seedKey(ex.n, envOf(d))];
+  return (+v>0) ? snap(ex, v) : null;
+}
 /* 既定値（入力の手間をゼロに近づける） */
 function defaults(w,d,ex,i){
   const cur=getLog(w,d,ex.n);
@@ -514,6 +542,7 @@ function defaults(w,d,ex,i){
       for(let j=i-1;j>=0;j--) if(cur[j]) { kg=cur[j].kg; break; }
       if(kg==null) kg = prev ? prev.kg : (h ? h.kg : null);
     }
+    if(kg==null) kg = seedOf(ex,d);
     const reps = (h && h.type==='up') ? ex.r : (prev ? prev.reps : ex.r);
     return {kg, reps, rpe:ex.rpe};
   }
@@ -524,6 +553,8 @@ function defaults(w,d,ex,i){
   if(rec!==null) return {kg:rec, reps:ex.r, rpe:ex.rpe};
   if(h) return {kg:h.kg, reps:h.reps, rpe:ex.rpe};
   if(prev) return {kg:prev.kg, reps:prev.reps||ex.r, rpe:ex.rpe};
+  const sd = seedOf(ex,d);
+  if(sd) return {kg:sd, reps:ex.r||null, rpe:ex.rpe};
   return {kg:ex.nw?0:null, reps:ex.r||null, rpe:ex.rpe};
 }
 /* ダブルプログレッション
@@ -654,6 +685,7 @@ function render(){
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
           ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
         </div>
+        ${(!lp && seedOf(ex,d))?`<div class="prev"><b>開始重量 ${fmt(seedOf(ex,d))}kg</b>　<span style="opacity:.7">前プログラムの実績から引き継ぎ。ここから始めてください</span></div>`:''}
         ${lp?`<div class="prev"><b>前回 W${lp.w}·${dayLabel(lp.d)}</b>　${
             lp.sets.filter(Boolean).map(s=>`${fmt(s.kg)}×${s.reps}${s.rpe?`<span style="opacity:.6">@${s.rpe}</span>`:''}`).join(' / ')
           }</div>`:''}
@@ -833,7 +865,8 @@ $('opencfg').onclick=()=>{
     <button class="btn" id="ccopy">全データをコピー（Claudeに貼れば集計できます）</button>
     <button class="btn" id="cload">上のテキストを読み込み</button>
     <div class="mlabel">危険な操作</div>
-    <button class="btn dgr" id="cclear">記録をすべて消去</button>
+    <button class="btn" id="ckeep">記録を消去（各種目の開始重量は残す）</button>
+    <button class="btn dgr" id="cclear">記録をすべて消去（開始重量も消す）</button>
     <button class="btn" id="cclose" style="margin-top:18px">閉じる</button>`;
   $('sheet').classList.add('on');
   $('csave').onclick=()=>{ const v=+$('cbase').value; if(v>0){st.base=v;draft={};save();render();toast('保存しました');} };
@@ -842,6 +875,12 @@ $('opencfg').onclick=()=>{
   $('cload').onclick=()=>{ try{ const o=JSON.parse($('iojson').value);
     st=Object.assign({},DEF,o); save(); render(); $('sheet').classList.remove('on'); toast('読み込みました');
   }catch(e){ alert('JSONが読めませんでした'); } };
+  $('ckeep').onclick=()=>{
+    const seed=buildSeed(), n=Object.keys(seed).length;
+    if(!confirm(`記録を消して W1 から始めます。\n${n}種目の開始重量は引き継がれます。\n元に戻せません。`)) return;
+    st=Object.assign({},DEF,{seed, base:st.base});
+    save(); render(); $('sheet').classList.remove('on'); toast(`${n}種目の重量を引き継ぎました`);
+  };
   $('cclear').onclick=()=>{ if(confirm('すべての記録を消します。元に戻せません。'))
     { st=Object.assign({},DEF); save(); render(); $('sheet').classList.remove('on'); } };
   $('cclose').onclick=()=>$('sheet').classList.remove('on');
