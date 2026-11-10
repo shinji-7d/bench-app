@@ -474,36 +474,48 @@ function recKg(w,ex){
 }
 /* 直近の同種目の記録を探す（今の週より前、同じ種目名） */
 function envOf(id){ const x=DAYS.find(y=>y.id===id); return (x&&x.env)||'gym'; }
-/* 前回記録は「同じ環境」からしか引かない。
-   自宅の可変ダンベル(2.5/3.5/4.5/…)とジムのダンベル(1kg刻み)は
-   刻みも実在重量も違うので、混ざると存在しない重量が初期値に出てしまう。 */
-function lastLog(w,d,name){
+/* 参照は常に「同じ環境」から。自宅の可変ダンベル(2.5/3.5/4.5/…)と
+   ジムのダンベル(1kg刻み)は実在重量が違うので、混ざると存在しない重量が出る。 */
+
+/* ① 同じ枠（同じ曜日）の過去週。疲労条件が揃うので、判定と初期値はこれを基準にする。
+      例：土のサイドレイズは6種目目で必ず落ちる。月の数字と比べても意味がない。 */
+function slotLog(w,d,name){
+  for(let ww=w-1; ww>=1; ww--){
+    const l=st.logs[lk(ww,d,name)];
+    if(l && l.filter(Boolean).length)
+      return {w:ww, d, sets:l, slot:true, t:st.date[`W${ww}|${d}`]||''};
+  }
+  return null;
+}
+/* ② 同じ環境の直近の記録（枠は問わない）。表示だけに使う。 */
+function recentLog(w,d,name){
   const env = envOf(d);
   const days = DAYS.map(x=>x.id).filter(x=>envOf(x)===env);
   const idx = {}; days.forEach((x,i)=>idx[x]=i);
   const cands=[];
-  for(let ww=w; ww>=1; ww--){
-    for(const dd of days){
-      if(ww===w && dd===d) continue;
-      const l=st.logs[lk(ww,dd,name)];
-      if(l && l.filter(Boolean).length)
-        cands.push({w:ww, d:dd, sets:l, t:st.date[`W${ww}|${dd}`]||''});
-    }
+  for(let ww=w; ww>=1; ww--) for(const dd of days){
+    if(ww===w && dd===d) continue;
+    const l=st.logs[lk(ww,dd,name)];
+    if(l && l.filter(Boolean).length)
+      cands.push({w:ww, d:dd, sets:l, t:st.date[`W${ww}|${dd}`]||''});
   }
-  if(!cands.length){
-    // 記録がまだ無い種目は、前プログラムから引き継いだ実績を「前回」として扱う
-    const e = st.seed && st.seed[seedKey(name, envOf(d))];
-    return (e && e.sets && e.sets.length) ? {w:e.label||'前', d:d, sets:e.sets, seed:true} : null;
-  }
-  // 実施日の新しい順。週に2回ある種目は、同じ週の直近の回を参照する。
-  // 日付が無い記録は、週→DAYSの並び（＝週内の後ろほど新しい）で代替する。
+  if(!cands.length) return null;
   cands.sort((a,b)=>{
     if(a.t && b.t && a.t!==b.t) return a.t<b.t ? 1 : -1;
-    if(!!a.t !== !!b.t) return a.t ? -1 : 1;   // 日付のある記録を優先
+    if(!!a.t !== !!b.t) return a.t ? -1 : 1;
     if(a.w!==b.w) return b.w-a.w;
     return idx[b.d]-idx[a.d];
   });
   return cands[0];
+}
+/* ③ 判定に使う「前回」。同じ枠 → 無ければ直近 → それも無ければ前プログラムの実績 */
+function lastLog(w,d,name){
+  const slot = slotLog(w,d,name);
+  if(slot) return slot;
+  const rec = recentLog(w,d,name);
+  if(rec) return rec;
+  const e = st.seed && st.seed[seedKey(name, envOf(d))];
+  return (e && e.sets && e.sets.length) ? {w:e.label||'前', d:d, sets:e.sets, seed:true} : null;
 }
 function dayLabel(id){ const x=DAYS.find(y=>y.id===id); return x?x.lb:id; }
 
@@ -680,6 +692,7 @@ function render(){
     const full=doneN>=ex.s;
     const rec=recKg(w,ex);
     const lp=lastLog(w,d,ex.n);
+    const recent=recentLog(w,d,ex.n);
     const hint=progHint(w,d,ex);
     const act = edit[ex.n]!=null ? edit[ex.n] : (full?-1:doneN);
 
@@ -697,9 +710,17 @@ function render(){
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
           ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
         </div>
-        ${lp?`<div class="prev"><b>${lp.seed?`前回 ${lp.w}`:`前回 W${lp.w}·${dayLabel(lp.d)}`}</b>${lp.seed?'<span style="opacity:.7">（前プログラム）</span>':''}　${
+        ${lp?`<div class="prev"><b>${
+              lp.seed ? `前回 ${lp.w}` :
+              lp.slot ? `前回 W${lp.w}（同じ枠）` : `前回 W${lp.w}·${dayLabel(lp.d)}`
+            }</b>${lp.seed?'<span style="opacity:.7">（前プログラム）</span>':''}　${
             lp.sets.filter(Boolean).map(s=>`${fmt(s.kg)}×${s.reps}${s.rpe?`<span style="opacity:.6">@${s.rpe}</span>`:''}`).join(' / ')
           }</div>`:''}
+        ${(recent && !(lp && lp.w===recent.w && lp.d===recent.d))
+          ? `<div class="prev" style="opacity:.62">直近 W${recent.w}·${dayLabel(recent.d)}　${
+              recent.sets.filter(Boolean).map(s=>`${fmt(s.kg)}×${s.reps}`).join(' / ')
+            }　<span style="opacity:.8">※疲労条件が違うので目標にしない</span></div>`
+          : ''}
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
             hint.type==='up'
               ? (ex.iso
