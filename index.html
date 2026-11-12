@@ -223,6 +223,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
 const RND = 2.5;
 /* 多関節のバックオフ既定値。元プログラムの「2set目以降 5%下げ／下限10%」に準拠 */
 const BACKOFF=[1, 0.95, 0.95, 0.95, 0.95, 0.95];
+/* bo（バックオフのレップレンジ）を持つ種目は、回数を増やすぶん大きく落とす */
+const BACKOFF_H=[1, 0.92, 0.88, 0.85, 0.85, 0.85];
 /* 自宅の可変ダンベル（実在する重量のみ） */
 const HOME=[2.5,3.5,4.5,5.5,6.5,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
 /* ジムのダンベル（10kgまで1kg刻み、10kg超は2kg刻み） */
@@ -282,9 +284,10 @@ function buildDay(w, day){
 
   /* 水：胸・肩前部・三頭 ＋ 四頭（90分） */
   if(day==='d1'){
-    push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,unit:2.5,e1:1,rpe:R(8,dl),rest:150,
+    push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,bo:[8,12],unit:2.5,e1:1,rpe:R(8,dl),rest:150,
       note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'1set目をRPE8に合わせる。2set目以降は1set目から5%下げる（RPEを超えそうなら最大10%まで）。1set目が6回割れたらトップセットを下げる'});
+      imp:'1set目は6〜8回でRPE8（ここが記録）。2set目以降は重量を落として8〜12回でRPE8を狙う。'
+          +'肥大目的なので下げ幅に上限はない。軽くして回数を増やすほうがよい。1set目が6回割れたらトップセットを下げる'});
     push({n:'インクラインDBプレス',s:S(3,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
@@ -313,11 +316,11 @@ function buildDay(w, day){
 
   /* 土：背中・胸2巡目・脚（90分） */
   if(day==='d3'){
-    push({n:'ベンチプレス',s:S(3,a),r:4,rx:6,unit:2.5,rpe:R(8,dl),rest:150,
+    push({n:'ベンチプレス',s:S(3,a),r:4,rx:6,bo:[6,10],unit:2.5,rpe:R(8,dl),rest:150,
       note:'週2回目のフラットベンチ。水より重く少ない回数で、挙上の技術を反復する',
-      imp:'水より重く少ない回数。1set目をRPE8に合わせ、2set目以降は1set目から5%下げる（下限10%）'});
-    push({n:'インクラインベンチプレス（スミス）',s:S(3,a),r:6,rx:10,unit:2.5,rpe:R(8,dl),rest:150,
-      note:'バーが鎖骨の下に落ちる位置にベンチを置く。記録はプレート合計でOK',
+      imp:'1set目は4〜6回でRPE8。2set目以降は落として6〜10回でRPE8を狙う'});
+    push({n:'インクラインベンチプレス（スミス）',s:S(3,a),r:6,rx:10,bo:[8,12],unit:2.5,rpe:R(8,dl),rest:150,
+      note:'1set目は6〜10回、2set目以降は落として8〜12回。バーが鎖骨の下に落ちる位置にベンチを置く',
       imp:'必ず同じスミス台を使う。台が変わるとバー重量が変わり、記録が繋がらなくなる'});
     push({n:'ラットプルダウン',s:S(3,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
       note:'木より少し軽く回数を多めに'});
@@ -580,11 +583,22 @@ function defaults(w,d,ex,i){
     const prevTop = +lp.sets[0].kg;
     const topNow = (cur[0] && +cur[0].kg>0) ? +cur[0].kg : (h ? h.kg : null);
     if(topNow){
-      let r = prev && +prev.kg>0 ? (+prev.kg)/prevTop : 1;
-      // 前回バックオフしていなければ規定の下げ幅を当てる。
-      // 1set目を指定RPEに合わせた以上、同じ重量で次のセットが成立することはない。
-      if(!(r < 0.995)) r = BACKOFF[Math.min(i, BACKOFF.length-1)];
-      return {kg: snap(ex, topNow*r), reps: (prev && prev.reps) || ex.r, rpe:ex.rpe};
+      // bo（高レップのバックオフ）を持つ種目は常に規定の下げ幅を使う。
+      // 前回のパターンを混ぜると、規定値と実績が入り混じって逆戻りが起きる。
+      let r;
+      if(ex.bo){
+        r = BACKOFF_H[Math.min(i, BACKOFF_H.length-1)];
+      } else {
+        r = prev && +prev.kg>0 ? (+prev.kg)/prevTop : 1;
+        if(!(r < 0.995)) r = BACKOFF[Math.min(i, BACKOFF.length-1)];
+      }
+      // 前のセットより重くならないようにする
+      const before = (i>0) ? defaults(w,d,ex,i-1).kg : null;
+      let kg = snap(ex, topNow*r);
+      if(before!=null && kg > before) kg = before;
+      const pr = (prev && prev.reps) || 0;
+      const rp = ex.bo ? (pr>=ex.bo[0] && pr<=ex.bo[1] ? pr : ex.bo[0]) : (pr||ex.r);
+      return {kg, reps: rp, rpe:ex.rpe};
     }
   }
   // 同一セッション内の直前セットを引き継ぐ
@@ -722,7 +736,9 @@ function render(){
           ${full?'<span class="cchk">✓</span>':''}
         </div>
         <div class="cmeta">
-          <span class="tag">${ex.s} × ${ex.nw?(ex.r?ex.r:'限界'):(ex.rx?`${ex.r}〜${ex.rx}`:ex.r)}</span>
+          <span class="tag">${ex.bo
+              ? `${ex.s}セット｜1set ${ex.r}〜${ex.rx} ／ 以降 ${ex.bo[0]}〜${ex.bo[1]}`
+              : `${ex.s} × ${ex.nw?(ex.r?ex.r:'限界'):(ex.rx?`${ex.r}〜${ex.rx}`:ex.r)}`}</span>
           ${ex.iso?`<span class="tag rpe isotag">フォーム崩れまで</span>`
                   :(ex.rpe?`<span class="tag rpe">@${ex.rpe}</span>`:'')}
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
