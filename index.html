@@ -282,7 +282,7 @@ function buildDay(w, day){
   if(day==='d1'){
     push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,unit:2.5,e1:1,rpe:R(8,dl),rest:150,
       note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'週で一番重い日。1set目が6回割れたら重量を下げる'});
+      imp:'1set目をRPE8に合わせる。2set目以降は5〜10%下げて同じRPEを保つ（元プログラムのBack offルール）。1set目が6回割れたらトップセットを下げる'});
     push({n:'インクラインDBプレス',s:S(3,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
@@ -313,7 +313,7 @@ function buildDay(w, day){
   if(day==='d3'){
     push({n:'ベンチプレス',s:S(3,a),r:4,rx:6,unit:2.5,rpe:R(8,dl),rest:150,
       note:'週2回目のフラットベンチ。水より重く少ない回数で、挙上の技術を反復する',
-      imp:'水より重く少ない回数。@8で止める（潰れるまではやらない）'});
+      imp:'水より重く少ない回数。1set目をRPE8に合わせ、2set目以降は5〜10%下げる'});
     push({n:'インクラインベンチプレス（スミス）',s:S(3,a),r:6,rx:10,unit:2.5,rpe:R(8,dl),rest:150,
       note:'バーが鎖骨の下に落ちる位置にベンチを置く。記録はプレート合計でOK',
       imp:'必ず同じスミス台を使う。台が変わるとバー重量が変わり、記録が繋がらなくなる'});
@@ -572,6 +572,15 @@ function defaults(w,d,ex,i){
     return {kg, reps, rpe:ex.rpe};
   }
 
+  // 多関節の2set目以降は、前回の同じセット（＝自分のバックオフ幅）を引き継ぐ。
+  // トップセットが上がった週は、その比率で全セットを持ち上げる。
+  if(i>0 && prev && lp && lp.sets[0] && +lp.sets[0].kg>0){
+    const topNow = (cur[0] && +cur[0].kg>0) ? +cur[0].kg : (h ? h.kg : null);
+    if(topNow){
+      const r = topNow / +lp.sets[0].kg;
+      return {kg: snap(ex, prev.kg*r), reps: prev.reps||ex.r, rpe:ex.rpe};
+    }
+  }
   // 同一セッション内の直前セットを引き継ぐ
   for(let j=i-1;j>=0;j--) if(cur[j]) return {kg:cur[j].kg, reps:cur[j].reps||ex.r, rpe:ex.rpe||cur[j].rpe};
   const rec=recKg(w,ex);
@@ -607,12 +616,14 @@ function progHint(w,d,ex){
     return {type:'reps', kg: snap(ex, s1.kg), reps: ex.r, vol, nextKg: stepUp(ex, s1.kg)};
   }
 
-  // 多関節：全セットがレンジ上限 かつ 指定RPE以内 → 1段階上げる
-  if(lp.sets.every(s=>s.reps>=ex.rx && s.rpe<=ex.rpe))
-    return {type:'up', kg: stepUp(ex, base), reps: ex.r};
-  // まだ揃っていない → 重量そのままでレップを伸ばす（基準は一番少なかったセット）
-  const low = Math.min(...lp.sets.map(s=>s.reps));
-  return {type:'reps', kg: base, reps: Math.min(ex.rx, low+1), nextKg: stepUp(ex, base)};
+  // 多関節：トップセット（1set目）＋バックオフ方式。
+  // 同じ重量を全セットで続けると1set目が軽すぎ、最終セットだけが指定RPEになる。
+  // 1set目を指定RPEに合わせ、2set目以降は5〜10%下げて同じRPEを保つ。
+  // したがって判定は1set目だけで行う（最終セットの重量を基準にすると後退する）。
+  const t1 = lp.sets[0], top = snap(ex, t1.kg);
+  if(t1.reps >= ex.rx && t1.rpe <= ex.rpe)
+    return {type:'up', kg: stepUp(ex, top), reps: ex.r};
+  return {type:'reps', kg: top, reps: Math.min(ex.rx, t1.reps+1), nextKg: stepUp(ex, top)};
 }
 
 /* ============================================================
@@ -726,10 +737,10 @@ function render(){
             hint.type==='up'
               ? (ex.iso
                   ? `1set目が${ex.rx}回に到達 → <b>${fmt(hint.kg)}kg</b> へ上げる（前回の総負荷 ${hint.vol}kg）`
-                  : `前回 全セット${ex.rx}回達成 → <b>${fmt(hint.kg)}kg × ${ex.r}回</b> へ上げる`)
+                  : `1set目が${ex.rx}回に到達 → トップセットを <b>${fmt(hint.kg)}kg</b> へ上げる`)
               : (ex.iso
                   ? `1set目 <b>${fmt(hint.kg)}kg</b> で限界まで。2set目以降は落としてOK（前回の総負荷 <b>${hint.vol}kg</b> 超えが目標／1set目${ex.rx}回で ${fmt(hint.nextKg)}kg へ）`
-                  : `<b>${fmt(hint.kg)}kg × ${hint.reps}回 を全セット</b>（1set目で出し切らない。${ex.rx}回×全セットで ${fmt(hint.nextKg)}kg へ）`)
+                  : `1set目 <b>${fmt(hint.kg)}kg × ${hint.reps}回</b>（2set目以降は5〜10%下げて@${ex.rpe}を保つ。1set目${ex.rx}回で ${fmt(hint.nextKg)}kg へ）`)
           }</button></div>`:''}
         ${volBar(ex, log, lp, hint)}
         ${ex.imp?`<div class="note imp">${esc(ex.imp)}</div>`:(ex.note?`<div class="note">${esc(ex.note)}</div>`:'')}
