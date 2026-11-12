@@ -234,7 +234,7 @@ const WK = {
  7:{lb:'蓄積3',   acc:1,  dl:0},  8:{lb:'デロード', acc:-2, dl:1},
  9:{lb:'蓄積1',   acc:0,  dl:0}, 10:{lb:'蓄積2',   acc:0,  dl:0},
 11:{lb:'蓄積3',   acc:1,  dl:0}, 12:{lb:'デロード', acc:-2, dl:1},
-13:{lb:'測定',    acc:-1, dl:0}
+13:{lb:'評価週',  acc:-1, dl:1}
 };
 // week -> [目標RPE, %1RM]（RPE換算表の1rep値に一致させてある）
 const TSP = {1:[6.5,87],2:[7,89],3:[7.5,90],4:[6,86],5:[7,89],6:[7.5,90],7:[8,92],
@@ -282,8 +282,9 @@ function buildDay(w, day){
   if(day==='d1'){
     push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,unit:2.5,e1:1,rpe:R(8,dl),rest:150,
       note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'週で一番重い日。1set目が6回割れたら重量を下げる'});
-    push({n:'インクラインDBプレス',s:S(4,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
+      imp:'週で一番重い日。1set目が6回割れたら重量を下げる。'
+          +'高血圧の既往があるため、医師の確認までは限界まで挙げない（@8で止める）。息を止め続けない'});
+    push({n:'インクラインDBプレス',s:S(3,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
       note:'胸をストレッチさせて締める仕上げ。マシンが無ければケーブルフライで代用'});
@@ -311,21 +312,22 @@ function buildDay(w, day){
 
   /* 土：背中・胸2巡目・脚（90分） */
   if(day==='d3'){
-    push({n:'インクラインベンチプレス（スミス）',s:S(4,a),r:6,rx:10,unit:2.5,rpe:R(8,dl),rest:150,
-      note:'バーが鎖骨の下に落ちる位置にベンチを置く。記録はプレート合計でOK（毎回同じ台なら比較できる）',
+    push({n:'ベンチプレス',s:S(3,a),r:4,rx:6,unit:2.5,rpe:R(8,dl),rest:150,
+      note:'週2回目のフラットベンチ。水より重く少ない回数で、挙上の技術を反復する',
+      imp:'@8で止める。高血圧の既往があるため限界まで挙げない。息を止め続けない'});
+    push({n:'インクラインベンチプレス（スミス）',s:S(3,a),r:6,rx:10,unit:2.5,rpe:R(8,dl),rest:150,
+      note:'バーが鎖骨の下に落ちる位置にベンチを置く。記録はプレート合計でOK',
       imp:'必ず同じスミス台を使う。台が変わるとバー重量が変わり、記録が繋がらなくなる'});
-    push({n:'ラットプルダウン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
+    push({n:'ラットプルダウン',s:S(3,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
       note:'木より少し軽く回数を多めに'});
-    push({n:'ローイングマシン',s:S(4,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
-      note:'グリップを変えると刺激が変わる'});
+    push({n:'ローイングマシン',s:S(3,a),r:10,rx:12,unit:5,rpe:R(8,dl),rest:90,
+      note:'胸パッドに預けるチェストサポートロー。グリップを変えると刺激が変わる'});
     push({n:'レッグプレス',s:S(3,a),r:15,rx:20,unit:10,rpe:R(8,dl),rest:120,
       imp:'脚の週2回目。水より軽く高回数。腰に来たら即中止'});
     push({n:'レッグカール',s:S(4,a),r:12,rx:20,unit:5,iso:1,rpe:R(8,dl),rest:60,
       note:'ハム。腰の保険にもなるので飛ばさない'});
     push({n:'サイドレイズ',s:S(4,a),r:12,rx:20,steps:GYMDB,iso:1,rpe:R(9,dl),rest:60,
       note:'週2回目。軽くていいので必ずやる'});
-    push({n:'インクラインDBカール',s:3,r:8,rx:12,steps:GYMDB,iso:1,opt:true,rpe:R(9,dl),rest:45,
-      note:'時間が余った日だけ'});
     push({n:'腰プレハブ（McGill Big3）',s:2,r:1,nw:true,rpe:7,rest:45,
       imp:'腰痛の再発予防。1セット＝①バードドッグ 8回/側（各8秒静止）②サイドプランク 20〜30秒/側 ③カールアップ 8回（各10秒静止）を通しで。重量は0のまま記録する'});
   }
@@ -362,11 +364,11 @@ function testDay(day){
   const E=[];
   const push=(o)=>E.push(Object.assign({pct:null,unit:RND,note:'',rest:90},o));
   if(day==='d1'){
-    push({n:'ウォームアップ',s:1,r:1,nw:true,rest:180,
-      note:'バー×10 → 40×5 → 55×3 → 65×2 → 72×1 と上げていく'});
-    push({n:'ベンチプレス',s:4,r:1,unit:2.5,e1:1,rpe:10,rest:300,
-      imp:'13週の答え合わせ。2.5kgずつ上げて、挙がらなくなるまで。補助者をつける'});
-    push({n:'ラットプルダウン',s:2,r:12,rx:15,unit:5,rpe:6,rest:90,note:'ダウン。軽く血を回して終了'});
+    push({n:'ベンチプレス',s:3,r:6,rx:8,unit:2.5,rpe:6.5,rest:150,
+      imp:'1RM測定は行わない（高血圧の既往のため、医師の確認まで）。'
+         +'推定1RMは通常セットから自動算出されるので、限界まで挙げる必要はない'});
+    push({n:'インクラインDBプレス',s:2,r:10,rx:12,steps:GYMDB,rpe:6,rest:90,note:'回復優先'});
+    push({n:'ラットプルダウン',s:2,r:12,rx:15,unit:5,rpe:6,rest:90});
   } else if(day==='d4'||day==='mB'){
     push({n:'レッグプレス',s:2,r:15,rx:20,unit:10,rpe:6,rest:90,note:'回復優先。追い込まない'});
     push({n:'レッグカール',s:2,r:15,rx:20,unit:5,iso:1,rpe:6,rest:60});
@@ -374,7 +376,7 @@ function testDay(day){
     push({n:'サイドレイズ',s:2,r:15,rx:20,steps:HOME,iso:1,rpe:6,rest:60});
     push({n:'ハンマーカール',s:2,r:12,rx:15,steps:HOME,iso:1,rpe:6,rest:60});
   } else {
-    push({n:'インクラインDBプレス',s:2,r:12,rx:15,steps:GYMDB,rpe:6,rest:90,note:'回復優先。追い込まない'});
+    push({n:'インクラインベンチプレス（スミス）',s:2,r:8,rx:10,unit:2.5,rpe:6,rest:120,note:'回復優先'});
     push({n:'ローイングマシン',s:2,r:12,rx:15,unit:5,rpe:6,rest:90});
   }
   return E;
@@ -671,10 +673,10 @@ function render(){
   let html='';
 
   if(p.dl) html+=`<div class="banner dl"><b>デロード週</b>　重量とセットを意図的に落としてあります。物足りなくて正解。ここで抜いた疲労が次の3週に効きます。</div>`;
-  if(w===13) html+=`<div class="banner test"><b>テスト週</b>　13週の答え合わせ。出た数字を設定の基準e1RMに入れると次のブロックが組めます。</div>`;
+  if(w===13) html+=`<div class="banner test"><b>評価週</b>　軽く回して疲労を抜きながら、体重・ウエスト・体組成を測る週。<b>1RM測定は行いません</b>（高血圧の既往のため）。推定1RMは通常セットから自動算出されます。</div>`;
 
   // ベンチ：100kgまでの距離を常に出す
-  if(d==='d1'){
+  if(d==='d1'||d==='d3'){
     const b = bestE1('ベンチプレス');
     html += b
       ? `<div class="ts">
