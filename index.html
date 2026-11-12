@@ -221,6 +221,8 @@ header{position:sticky;top:0;z-index:40;background:rgba(15,17,21,.94);
    プログラム定義
    ============================================================ */
 const RND = 2.5;
+/* 多関節のバックオフ既定値。元プログラムの「2set目以降 5%下げ／下限10%」に準拠 */
+const BACKOFF=[1, 0.95, 0.95, 0.95, 0.95, 0.95];
 /* 自宅の可変ダンベル（実在する重量のみ） */
 const HOME=[2.5,3.5,4.5,5.5,6.5,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
 /* ジムのダンベル（10kgまで1kg刻み、10kg超は2kg刻み） */
@@ -282,7 +284,7 @@ function buildDay(w, day){
   if(day==='d1'){
     push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,unit:2.5,e1:1,rpe:R(8,dl),rest:150,
       note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'1set目をRPE8に合わせる。2set目以降は5〜10%下げて同じRPEを保つ（元プログラムのBack offルール）。1set目が6回割れたらトップセットを下げる'});
+      imp:'1set目をRPE8に合わせる。2set目以降は1set目から5%下げる（RPEを超えそうなら最大10%まで）。1set目が6回割れたらトップセットを下げる'});
     push({n:'インクラインDBプレス',s:S(3,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
@@ -313,7 +315,7 @@ function buildDay(w, day){
   if(day==='d3'){
     push({n:'ベンチプレス',s:S(3,a),r:4,rx:6,unit:2.5,rpe:R(8,dl),rest:150,
       note:'週2回目のフラットベンチ。水より重く少ない回数で、挙上の技術を反復する',
-      imp:'水より重く少ない回数。1set目をRPE8に合わせ、2set目以降は5〜10%下げる'});
+      imp:'水より重く少ない回数。1set目をRPE8に合わせ、2set目以降は1set目から5%下げる（下限10%）'});
     push({n:'インクラインベンチプレス（スミス）',s:S(3,a),r:6,rx:10,unit:2.5,rpe:R(8,dl),rest:150,
       note:'バーが鎖骨の下に落ちる位置にベンチを置く。記録はプレート合計でOK',
       imp:'必ず同じスミス台を使う。台が変わるとバー重量が変わり、記録が繋がらなくなる'});
@@ -574,11 +576,15 @@ function defaults(w,d,ex,i){
 
   // 多関節の2set目以降は、前回の同じセット（＝自分のバックオフ幅）を引き継ぐ。
   // トップセットが上がった週は、その比率で全セットを持ち上げる。
-  if(i>0 && prev && lp && lp.sets[0] && +lp.sets[0].kg>0){
+  if(i>0 && lp && lp.sets[0] && +lp.sets[0].kg>0){
+    const prevTop = +lp.sets[0].kg;
     const topNow = (cur[0] && +cur[0].kg>0) ? +cur[0].kg : (h ? h.kg : null);
     if(topNow){
-      const r = topNow / +lp.sets[0].kg;
-      return {kg: snap(ex, prev.kg*r), reps: prev.reps||ex.r, rpe:ex.rpe};
+      let r = prev && +prev.kg>0 ? (+prev.kg)/prevTop : 1;
+      // 前回バックオフしていなければ規定の下げ幅を当てる。
+      // 1set目を指定RPEに合わせた以上、同じ重量で次のセットが成立することはない。
+      if(!(r < 0.995)) r = BACKOFF[Math.min(i, BACKOFF.length-1)];
+      return {kg: snap(ex, topNow*r), reps: (prev && prev.reps) || ex.r, rpe:ex.rpe};
     }
   }
   // 同一セッション内の直前セットを引き継ぐ
