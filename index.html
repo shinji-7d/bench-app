@@ -285,9 +285,12 @@ function buildDay(w, day){
   /* 水：胸・肩前部・三頭 ＋ 四頭（90分） */
   if(day==='d1'){
     push({n:'ベンチプレス',s:S(4,a),r:6,rx:8,bo:[8,12],unit:2.5,e1:1,rpe:R(8,dl),rest:150,
-      note:'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
-      imp:'1set目は6〜8回でRPE8（ここが記録）。2set目以降は重量を落として8〜12回でRPE8を狙う。'
-          +'肥大目的なので下げ幅に上限はない。軽くして回数を増やすほうがよい。1set目が6回割れたらトップセットを下げる'});
+      amrap:[3,7,11].indexOf(w)>=0,
+      note:[3,7,11].indexOf(w)>=0
+        ? '★今週は1set目だけフォームが崩れるまで挙げる（回数は何回でもよい）。推定1RMを更新する週。RPEは正直に記録する'
+        : 'ウォームアップ：バー×10 → 50%×5 → 70%×3 → 85%×1',
+      imp:'1set目は目標の回数ちょうどで止める（フォームが崩れたらそこで終了）。'
+          +'8回出れば次回+2.5kg、6回に届かなければ下げる。2set目以降は落としてフォームが崩れるまで'});
     push({n:'インクラインDBプレス',s:S(3,a),r:8,rx:12,steps:GYMDB,rpe:R(8,dl),rest:90,
       note:'胸の上部＝鎖骨の下。ここが厚いと服の上から分かる'});
     push({n:'ペックデックフライ',s:S(3,a),r:12,rx:15,unit:5,iso:1,rpe:R(9,dl),rest:75,
@@ -633,6 +636,7 @@ function progHint(w,d,ex){
       let kg = snap(ex, s1.kg); for(let k=0;k<n;k++) kg = stepUp(ex, kg);
       return {type:'up', kg, reps: ex.r, vol, n};
     }
+    if(s1.reps < ex.r) return {type:'down', kg: stepDown(ex, snap(ex,s1.kg)), reps: ex.r, vol};
     return {type:'reps', kg: snap(ex, s1.kg), reps: ex.r, vol, nextKg: stepUp(ex, s1.kg)};
   }
 
@@ -640,9 +644,10 @@ function progHint(w,d,ex){
   // 同じ重量を全セットで続けると1set目が軽すぎ、最終セットだけが指定RPEになる。
   // 1set目を指定RPEに合わせ、2set目以降は5〜10%下げて同じRPEを保つ。
   // したがって判定は1set目だけで行う（最終セットの重量を基準にすると後退する）。
+  // 判定はレップ数だけで行う。高レップや疲労下でRPEを当てるのは主観が入りすぎる。
   const t1 = lp.sets[0], top = snap(ex, t1.kg);
-  if(t1.reps >= ex.rx && t1.rpe <= ex.rpe)
-    return {type:'up', kg: stepUp(ex, top), reps: ex.r};
+  if(t1.reps >= ex.rx) return {type:'up', kg: stepUp(ex, top), reps: ex.r};
+  if(t1.reps <  ex.r)  return {type:'down', kg: stepDown(ex, top), reps: ex.r};
   return {type:'reps', kg: top, reps: Math.min(ex.rx, t1.reps+1), nextKg: stepUp(ex, top)};
 }
 
@@ -711,7 +716,7 @@ function render(){
     html += b
       ? `<div class="ts">
           <h3>ベンチプレス 推定1RM</h3>
-          <div class="d">記録したセットから自動計算しています（重量 ÷ RPE換算表の%）</div>
+          <div class="d">記録したセットから自動計算しています（重量 ÷ RPE換算表の%）。<b>W3・W7・W11</b>は1set目を限界まで挙げる週で、そこで取った数字が一番正確です</div>
           <div class="res">自己最高 <b>${b.v.toFixed(1)} kg</b>　<span style="font-size:11px;color:var(--tx3)">${b.w} ・ ${fmt(b.kg)}kg×${b.reps} @${b.rpe}</span><br>
             <span style="font-size:12px">100kgまで あと <b style="font-size:14px">${Math.max(0,100-b.v).toFixed(1)} kg</b>　/　達成率 ${Math.min(100,b.v).toFixed(0)}%</span></div>
         </div>`
@@ -740,7 +745,8 @@ function render(){
               ? `${ex.s}セット｜1set ${ex.r}〜${ex.rx} ／ 以降 ${ex.bo[0]}〜${ex.bo[1]}`
               : `${ex.s} × ${ex.nw?(ex.r?ex.r:'限界'):(ex.rx?`${ex.r}〜${ex.rx}`:ex.r)}`}</span>
           ${ex.iso?`<span class="tag rpe isotag">フォーム崩れまで</span>`
-                  :(ex.rpe?`<span class="tag rpe">@${ex.rpe}</span>`:'')}
+                  :(ex.amrap?`<span class="tag rpe isotag">1set目は限界まで（測定週）</span>`
+                  :(ex.rx?`<span class="tag rpe">1set目 ${ex.rx}回で重量アップ</span>`:''))}
           ${rec!==null?`<span class="tag rec">推奨 ${fmt(rec)}kg</span>`:''}
           ${ex.opt?'<span class="tag" style="color:var(--tx3)">任意</span>':''}
         </div>
@@ -756,7 +762,9 @@ function render(){
             }　<span style="opacity:.8">※疲労条件が違うので目標にしない</span></div>`
           : ''}
         ${hint?`<div class="hint"><button class="hintb" data-hint="${ei}">${
-            hint.type==='up'
+            hint.type==='down'
+              ? `1set目が${ex.r}回に届かなかった → <b>${fmt(hint.kg)}kg</b> へ下げる`
+            : hint.type==='up'
               ? (ex.iso
                   ? `1set目が${ex.rx}回に到達 → <b>${fmt(hint.kg)}kg</b> へ上げる（前回の総負荷 ${hint.vol}kg）`
                   : `1set目が${ex.rx}回に到達 → トップセットを <b>${fmt(hint.kg)}kg</b> へ上げる`)
@@ -788,9 +796,7 @@ function render(){
               <button data-step="reps" data-dir="1" data-ex="${ei}">＋</button>
             </div>
           </div>
-          <div class="rlab">${ex.iso
-            ? 'RPE — 記録用の目安。フォームが崩れたら終了＝@9。進行の判定には使いません'
-            : `RPE — ${dft.rpe&&RPED[dft.rpe]?esc(RPED[dft.rpe]):'ラックに戻した直後の直感で'}`}</div>
+          <div class="rlab">RPE — 記録用。進行の判定には使いません（回数だけで決まります）。わからなければ既定のままでOK</div>
           <div class="rpebar">${RPES.map(r=>
             `<button class="rchip ${dft.rpe===r?'on':''} ${(!ex.iso&&ex.rpe===r)?'tgt':''}" data-rpe="${r}" data-ex="${ei}">${r}</button>`).join('')}</div>
           <button class="logbtn ${s?'edit':''}" data-log="${ei}">${s?'上書きして保存':'記録する'}</button>
